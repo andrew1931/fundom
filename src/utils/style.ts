@@ -1,4 +1,4 @@
-import { IObservableState, ObservableState } from '../observable';
+import { IObservableState, isObservable } from '../observable';
 import { elementUpdater } from './_elementUpdater';
 
 type StyleInput =
@@ -11,16 +11,18 @@ export const style = <T extends HTMLElement>(styles: StyleInput) =>
          // @ts-ignore have a contract that key is valid style property
          el.style[key] = val;
       };
-      if (styles instanceof ObservableState) {
-         styles.subscribe((values: Record<string, string | number>) => {
-            Object.entries(values).forEach(([key, value]) => {
-               updateStyle(key, value);
-            });
-         });
+      if (isObservable(styles)) {
+         (styles as IObservableState<Record<string, string | number>>).subscribe(
+            (values: Record<string, string | number>) => {
+               Object.entries(values).forEach(([key, value]) => {
+                  updateStyle(key, value);
+               });
+            },
+         );
       } else {
          Object.entries(styles).forEach(([key, value]) => {
-            if (value instanceof ObservableState) {
-               value.subscribeImmediate((val) => {
+            if (isObservable(value)) {
+               (value as IObservableState<string | number>).subscribeImmediate((val) => {
                   updateStyle(key, val);
                });
             } else {

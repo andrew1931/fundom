@@ -5,6 +5,8 @@ export interface IObservableState<T> {
    subscribeImmediate(fn: (value: T) => void): () => void;
 }
 
+export const isObservable = (value: unknown) => value instanceof ObservableState;
+
 export class ObservableState<T> implements IObservableState<T> {
    current: T;
    private subscribers: Map<number, (value: T) => void> = new Map();

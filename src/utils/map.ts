@@ -1,4 +1,4 @@
-import { IObservableState, ObservableState } from '../observable';
+import { IObservableState, isObservable } from '../observable';
 import { elementUpdater } from './_elementUpdater';
 
 export const map = <T extends HTMLElement, C extends HTMLElement, D>(
@@ -6,8 +6,8 @@ export const map = <T extends HTMLElement, C extends HTMLElement, D>(
    childCb: (el: D, index: number) => C,
 ) =>
    elementUpdater<T>((el) => {
-      if (data instanceof ObservableState) {
-         data.subscribe((val) => {
+      if (isObservable(data)) {
+         (data as IObservableState<D[]>).subscribe((val) => {
             // TODO: implement forEach for ObservableState input
             console.log(val);
          });

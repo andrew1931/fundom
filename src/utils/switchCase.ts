@@ -1,4 +1,4 @@
-import { IObservableState, ObservableState } from '../observable';
+import { IObservableState, isObservable } from '../observable';
 import { elementUpdater } from './_elementUpdater';
 
 export const switchCase = <T extends HTMLElement, C extends HTMLElement, V>(
@@ -14,8 +14,8 @@ export const switchCase = <T extends HTMLElement, C extends HTMLElement, V>(
             }
          }
       };
-      if (value instanceof ObservableState) {
-         value.subscribe((val) => {
+      if (isObservable(value)) {
+         (value as IObservableState<V>).subscribe((val) => {
             handleCases(val);
          });
       } else {

@@ -1,4 +1,4 @@
-import { IObservableState, ObservableState } from '../observable';
+import { IObservableState, isObservable } from '../observable';
 import { elementUpdater } from './_elementUpdater';
 
 type AttrInput =
@@ -10,16 +10,18 @@ export const attr = <T extends HTMLElement>(attributes: AttrInput) =>
       const updateAttribute = (key: string, val: string) => {
          el.setAttribute(key, val);
       };
-      if (attributes instanceof ObservableState) {
-         attributes.subscribe((attr: Record<string, string>) => {
-            Object.entries(attr).forEach(([key, value]) => {
-               updateAttribute(key, value);
-            });
-         });
+      if (isObservable(attributes)) {
+         (attributes as IObservableState<Record<string, string>>).subscribe(
+            (attr: Record<string, string>) => {
+               Object.entries(attr).forEach(([key, value]) => {
+                  updateAttribute(key, value);
+               });
+            },
+         );
       } else {
          Object.entries(attributes).forEach(([key, value]) => {
-            if (value instanceof ObservableState) {
-               value.subscribeImmediate((val) => {
+            if (isObservable(value)) {
+               (value as IObservableState<string>).subscribeImmediate((val) => {
                   updateAttribute(key, val);
                });
             } else {
