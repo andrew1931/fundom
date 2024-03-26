@@ -1,5 +1,5 @@
 {
-   "name": "fun-ui",
+   "name": "fundom",
    "version": "0.0.1",
    "description": "Functional library for creating reactive ui elements",
    "main": "dist/index.js",
