@@ -7,7 +7,7 @@ export default [
     {
         input: 'src/index.ts',
         output: {
-            name: 'fun-ui',
+            name: 'FD',
             file: pkg.browser,
             format: 'umd'
         },
