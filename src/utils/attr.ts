@@ -1,4 +1,4 @@
-import { IObservableState, isObservable } from '../observable';
+import { IObservableState, isObservable } from '../observable/observableState';
 import { elementUpdater } from './_elementUpdater';
 
 type AttrInput =
@@ -17,13 +17,14 @@ export const attr = <T extends HTMLElement>(attributes: AttrInput) =>
                   updateAttribute(key, value);
                });
             },
+            el,
          );
       } else {
          Object.entries(attributes).forEach(([key, value]) => {
             if (isObservable(value)) {
                (value as IObservableState<string>).subscribeImmediate((val) => {
                   updateAttribute(key, val);
-               });
+               }, el);
             } else {
                updateAttribute(key, value as string);
             }

@@ -1,7 +1,12 @@
-import { composeOrPipe, composeOrPipeAsync } from './utils/_composeOrPipe';
-import { textOrHtml } from './utils/_textOrHtml';
-
 export * from './utils/attr';
+
+export * from './utils/text';
+
+export * from './utils/html';
+
+export * from './utils/classList';
+
+export * from './utils/id';
 
 export * from './utils/children';
 
@@ -19,18 +24,12 @@ export * from './utils/style';
 
 export * from './utils/switchCase';
 
-export * from './utils/tap';
+export * from './utils/sideEffect';
 
-export * from './observable';
+export * from './utils/pipe';
 
-export const compose = composeOrPipe(-1);
+export * from './utils/compose';
 
-export const pipe = composeOrPipe(1);
+export * from './utils/remove';
 
-export const composeAsync = composeOrPipeAsync(-1);
-
-export const pipeAsync = composeOrPipeAsync(1);
-
-export const html = textOrHtml('innerHTML');
-
-export const text = textOrHtml('innerText');
+export * from './observable/observableState';

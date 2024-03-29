@@ -1,4 +1,4 @@
-import { IObservableState, isObservable } from '../observable';
+import { IObservableState, isObservable } from '../observable/observableState';
 import { elementUpdater } from './_elementUpdater';
 
 export const displayWhen = <T extends HTMLElement>(value: IObservableState<any>) =>
@@ -10,7 +10,7 @@ export const displayWhen = <T extends HTMLElement>(value: IObservableState<any>)
       if (isObservable(value)) {
          value.subscribeImmediate((val) => {
             updateDisplay(val);
-         });
+         }, el);
       } else {
          console.warn('[displayWhen]: provided value is not instanceof ObservableState');
       }
