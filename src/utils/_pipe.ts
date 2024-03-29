@@ -1,10 +1,8 @@
-import { elementUpdater, elementUpdaterAsync } from './_elementUpdater';
+import { type FD, elementUpdater, elementUpdaterAsync } from './_elementUpdater';
 
-export type FunctionsList<T extends HTMLElement> = ReturnType<
-   typeof elementUpdater<T> | typeof elementUpdaterAsync<T>
->[];
+export type FunctionsList = ReturnType<typeof elementUpdater | typeof elementUpdaterAsync>[];
 
-let hasAsyncFunctions = <T extends HTMLElement>(functions: FunctionsList<T>) => {
+let hasAsyncFunctions = (functions: FunctionsList): boolean => {
    const AsyncFunction = (async () => {}).constructor;
    for (let fn of functions) {
       if (fn instanceof AsyncFunction) {
@@ -14,7 +12,7 @@ let hasAsyncFunctions = <T extends HTMLElement>(functions: FunctionsList<T>) => 
    return false;
 };
 
-export const _pipe = <T extends HTMLElement>(el: T, functions: FunctionsList<T>): T => {
+export const _pipe = (el: FD.Element, functions: FunctionsList): FD.Element => {
    if (hasAsyncFunctions(functions)) {
       setTimeout(async () => {
          for await (const fn of functions) {
@@ -29,15 +27,12 @@ export const _pipe = <T extends HTMLElement>(el: T, functions: FunctionsList<T>)
       return el;
    }
 
-   return (functions as ReturnType<typeof elementUpdater<T>>[]).reduce((prev, cur) => {
+   return (functions as ReturnType<typeof elementUpdater>[]).reduce((prev, cur) => {
       return cur(prev);
    }, el);
 };
 
-export const _pipeAsync = async <T extends HTMLElement>(
-   el: T,
-   functions: FunctionsList<T>,
-): Promise<T> => {
+export const _pipeAsync = async (el: FD.Element, functions: FunctionsList): Promise<FD.Element> => {
    for await (const fn of functions) {
       const res = fn(el);
       if (res instanceof Promise) {

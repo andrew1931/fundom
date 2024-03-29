@@ -1,6 +1,6 @@
-import { elementUpdater } from './_elementUpdater';
+import { type FD, elementUpdater } from './_elementUpdater';
 
-export const sideEffect = <T extends HTMLElement>(cb: (el: T) => void) =>
-   elementUpdater<T>((el) => {
+export const sideEffect = (cb: (el: FD.Element) => void) =>
+   elementUpdater((el) => {
       cb(el);
    });

@@ -1,11 +1,11 @@
 import { IObservableState, isObservable } from '../observable/observableState';
-import { elementUpdater } from './_elementUpdater';
+import { type FD, elementUpdater } from './_elementUpdater';
 
-export const map = <T extends HTMLElement, C extends HTMLElement, D>(
+export const map = <D>(
    data: D[] | IObservableState<D[]>,
-   childCb: (el: D, index: number) => C,
+   childCb: (el: D, index: number) => FD.Element,
 ) =>
-   elementUpdater<T>((el) => {
+   elementUpdater((el) => {
       if (isObservable(data)) {
          (data as IObservableState<D[]>).subscribe((val) => {
             // TODO: implement map for ObservableState input

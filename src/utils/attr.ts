@@ -5,8 +5,8 @@ type AttrInput =
    | Record<string, string | IObservableState<string>>
    | IObservableState<Record<string, string>>;
 
-export const attr = <T extends HTMLElement>(attributes: AttrInput) =>
-   elementUpdater<T>((el) => {
+export const attr = (attributes: AttrInput) =>
+   elementUpdater((el) => {
       const updateAttribute = (key: string, val: string) => {
          el.setAttribute(key, val);
       };

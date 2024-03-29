@@ -1,6 +1,6 @@
-import { elementUpdater } from './_elementUpdater';
+import { type FD, elementUpdater } from './_elementUpdater';
 
-export const children = <T extends HTMLElement>(...content: T[]) =>
-   elementUpdater<T>((el) => {
+export const children = (...content: FD.Element[]) =>
+   elementUpdater((el) => {
       el.append(...content);
    });

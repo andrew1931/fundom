@@ -1,12 +1,11 @@
 import { IObservableState, isObservable } from '../observable/observableState';
-import { elementUpdater } from './_elementUpdater';
+import { type FD, elementUpdater } from './_elementUpdater';
 
-export const switchCase = <T extends HTMLElement, C extends HTMLElement, V>(
+export const switchCase = <V>(
    value: V | IObservableState<V>,
-   cases: Array<[predicate: (value: V) => boolean, element: C]>,
+   cases: Array<[predicate: (value: V) => boolean, element: FD.Element]>,
 ) =>
-   elementUpdater<T>((el) => {
-
+   elementUpdater((el) => {
       const handleCases = (val: V): void => {
          for (let [predicate, element] of cases) {
             if (predicate(val)) {

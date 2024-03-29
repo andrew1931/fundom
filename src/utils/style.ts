@@ -15,8 +15,8 @@ type StyleInput =
 const WRONG_ARRAY_TYPE_ERROR =
    'style value of Array type should have setter function as first argument and array of ObservableStates as a second';
 
-export const style = <T extends HTMLElement>(styles: StyleInput) =>
-   elementUpdater<T>((el) => {
+export const style = (styles: StyleInput) =>
+   elementUpdater((el) => {
       const updateStyle = (key: string, val: StyleValue) => {
          const updater = (primitiveVal: ValuePrimitive) => el.style.setProperty(key, primitiveVal);
 

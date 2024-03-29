@@ -1,7 +1,8 @@
 import { IObservableState, isObservable } from '../observable/observableState';
+import type { FD } from './_elementUpdater';
 
-export const _stringArgsUpdater = <T extends HTMLElement>(
-   el: T,
+export const _stringArgsUpdater = (
+   el: FD.Element,
    content: (any | IObservableState<any>)[],
    cb: (val: string) => void,
 ) => {

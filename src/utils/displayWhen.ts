@@ -1,8 +1,8 @@
 import { IObservableState, isObservable } from '../observable/observableState';
 import { elementUpdater } from './_elementUpdater';
 
-export const displayWhen = <T extends HTMLElement>(value: IObservableState<any>) =>
-   elementUpdater<T>((el) => {
+export const displayWhen = (value: IObservableState<any>) =>
+   elementUpdater((el) => {
       const initialDisplay = el.style.display;
       const updateDisplay = (val: any) => {
          el.style.display = val ? initialDisplay : 'none';

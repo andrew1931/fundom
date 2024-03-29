@@ -1,10 +1,11 @@
+import { FD } from '../utils/_elementUpdater';
 import { ObservablesRegistry } from './observableRegistry';
 
 export interface IObservableState<T> {
    current: T;
    next(nextValue: T): void;
-   subscribe<E extends HTMLElement>(fn: (value: T) => void, el?: E): () => void;
-   subscribeImmediate<E extends HTMLElement>(fn: (value: T) => void, el?: E): () => void;
+   subscribe(fn: (value: T) => void, el?: FD.Element): () => void;
+   subscribeImmediate(fn: (value: T) => void, el?: FD.Element): () => void;
    unsubscribeAll(): void;
 }
 
@@ -30,7 +31,7 @@ export class ObservableState<T> implements IObservableState<T> {
       );
    }
 
-   subscribe<E extends HTMLElement>(fn: (value: T) => void, el?: E): () => void {
+   subscribe(fn: (value: T) => void, el?: FD.Element): () => void {
       const id = el || this.generateId();
       ObservablesRegistry.for(this.name, id, fn);
       return () => {
@@ -38,7 +39,7 @@ export class ObservableState<T> implements IObservableState<T> {
       };
    }
 
-   subscribeImmediate<E extends HTMLElement>(fn: (value: T) => void, el?: E): () => void {
+   subscribeImmediate(fn: (value: T) => void, el?: FD.Element): () => void {
       fn(this.current);
       return this.subscribe(fn, el);
    }

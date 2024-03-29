@@ -1,13 +1,15 @@
+import { FD } from '../utils/_elementUpdater';
+
 type RegistryItemValue = ((value: any) => void)[];
 
-type RegistrySybscribers = Map<HTMLElement | number, RegistryItemValue>;
+type RegistrySybscribers = Map<FD.Element | number, RegistryItemValue>;
 
 interface IObservableRegistry {
-   for: (id: symbol, el: HTMLElement | number, fn: (value: any) => void) => void;
+   for: (id: symbol, el: FD.Element | number, fn: (value: any) => void) => void;
    valueFor: (id: symbol) => RegistrySybscribers | undefined;
    register: (id: symbol) => void;
    unregister: (id: symbol) => void;
-   clearSubscribers: (id: symbol, el: HTMLElement | undefined | number) => void;
+   clearSubscribers: (id: symbol, el: FD.Element | undefined | number) => void;
    entries: () => IterableIterator<[symbol, RegistrySybscribers]>;
 }
 

@@ -1,6 +1,7 @@
 import { ObservablesRegistry } from '../observable/observableRegistry';
+import type { FD } from './_elementUpdater';
 
-const cleanUpSubscribers = <T extends HTMLElement>(el: T): void => {
+const cleanUpSubscribers = (el: FD.Element): void => {
    for (let [id, o] of ObservablesRegistry.entries()) {
       for (let [key] of o.entries()) {
          if (key instanceof HTMLElement) {
@@ -11,13 +12,13 @@ const cleanUpSubscribers = <T extends HTMLElement>(el: T): void => {
          }
       }
    }
-}
+};
 
-export const removeAndCleanUp = <T extends HTMLElement>(el: T): void => {
+export const removeAndCleanUp = (el: FD.Element): void => {
    el.remove();
    cleanUpSubscribers(el);
-}
+};
 
-export const removeWithoutCleanUp = <T extends HTMLElement>(el: T) => {
+export const removeWithoutCleanUp = (el: FD.Element) => {
    el.remove();
-}
+};

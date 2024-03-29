@@ -1,8 +1,8 @@
 import { IObservableState, isObservable } from '../observable/observableState';
 import { elementUpdater } from './_elementUpdater';
 
-export const renderWhen = <T extends HTMLElement>(value: IObservableState<any>) =>
-   elementUpdater<T>((el) => {
+export const renderWhen = (value: IObservableState<any>) =>
+   elementUpdater((el) => {
       let parent: ParentNode | null = null;
       let clone: Node | null;
       const updateDisplay = (val: any) => {
