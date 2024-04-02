@@ -1,6 +1,6 @@
-import { elementUpdaterAsync } from './_elementUpdater';
+import { _elementUpdaterAsync } from './_elementUpdater';
 
 export const sleep = (time: number) =>
-   elementUpdaterAsync((el) => {
+   _elementUpdaterAsync((el) => {
       return new Promise((resolve) => setTimeout(() => resolve(el), time));
    });

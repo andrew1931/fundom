@@ -1,27 +1,29 @@
-import { IObservableState, isObservable } from '../observable/observableState';
-import { elementUpdater } from './_elementUpdater';
+import { type IObservableState, isObservable } from '../observable/observableState';
+import { _elementUpdater } from './_elementUpdater';
+import { _observeElementInitialAppear } from './_observeElementInitalAppear';
 
-export const renderWhen = (value: IObservableState<any>) =>
-   elementUpdater((el) => {
-      let parent: ParentNode | null = null;
-      let clone: Node | null;
-      const updateDisplay = (val: any) => {
-         if (!parent) {
-            parent = el.parentNode;
-         }
-         if (parent) {
-            if (val) {
-               parent.appendChild(clone || el);
-            } else {
-               clone = parent.removeChild(clone || el);
-            }
+export const renderWhen = (value: IObservableState<boolean> | boolean) =>
+   _elementUpdater((el, context) => {
+      let currentEl: HTMLElement | Comment = el;
+      let placeholderEl: Comment = new Comment('');
+      const update = (val: boolean) => {
+         if (val) {
+            currentEl.replaceWith(el);
+            currentEl = el;
+         } else {
+            currentEl.replaceWith(placeholderEl);
+            currentEl = placeholderEl;
          }
       };
-      if (isObservable(value)) {
-         value.subscribeImmediate((val) => {
-            updateDisplay(val);
-         }, el);
-      } else {
-         console.warn('[renderWhen]: provided value is not instanceof ObservableState');
-      }
+      _observeElementInitialAppear(el, () => {
+         if (isObservable(value)) {
+            let unsubscribeCb = (value as IObservableState<boolean>).subscribeImmediate((val) => {
+               update(val);
+            });
+            context.addUnsibscribeCallback(unsubscribeCb);
+         } else {
+            update(value as boolean);
+         }
+      });
+      return el;
    });

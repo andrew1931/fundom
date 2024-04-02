@@ -1,24 +1,25 @@
-import { IObservableState, isObservable } from '../observable/observableState';
-import type { FD } from './_elementUpdater';
+import { type IObservableState, isObservable } from '../observable/observableState';
+import { type IPipeContext } from './_context';
 
 export const _stringArgsUpdater = (
-   el: FD.Element,
-   content: (any | IObservableState<any>)[],
+   context: IPipeContext,
+   content: ((string | number) | IObservableState<string | number>)[],
    cb: (val: string) => void,
 ) => {
-   let output: any[] = [];
+   let output: (string | number)[] = [];
    const updateFn = (): void => {
       cb(output.join(''));
    };
    content.forEach((item, index) => {
       if (isObservable(item)) {
-         output.push((item as IObservableState<any>).current);
-         (item as IObservableState<any>).subscribe((val) => {
+         output.push((item as IObservableState<string | number>).current);
+         let unsubscribeCb = (item as IObservableState<string | number>).subscribe((val) => {
             output[index] = val;
             updateFn();
-         }, el);
+         });
+         context.addUnsibscribeCallback(unsubscribeCb);
       } else {
-         output.push(item);
+         output.push(item as string | number);
       }
    });
    updateFn();

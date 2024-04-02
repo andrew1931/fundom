@@ -1,17 +1,19 @@
-import { IObservableState, isObservable } from '../observable/observableState';
-import { elementUpdater } from './_elementUpdater';
+import { type IObservableState, isObservable } from '../observable/observableState';
+import { _elementUpdater } from './_elementUpdater';
 
-export const displayWhen = (value: IObservableState<any>) =>
-   elementUpdater((el) => {
+export const displayWhen = (value: IObservableState<boolean> | boolean) =>
+   _elementUpdater((el, context) => {
       const initialDisplay = el.style.display;
-      const updateDisplay = (val: any) => {
-         el.style.display = val ? initialDisplay : 'none';
+      const update = (val: boolean) => {
+         el.style.setProperty('display', val ? initialDisplay : 'none');
       };
       if (isObservable(value)) {
-         value.subscribeImmediate((val) => {
-            updateDisplay(val);
-         }, el);
+         let unsubscribeCb = (value as IObservableState<boolean>).subscribeImmediate((val) => {
+            update(val);
+         });
+         context.addUnsibscribeCallback(unsubscribeCb);
       } else {
-         console.warn('[displayWhen]: provided value is not instanceof ObservableState');
+         update(value as boolean);
       }
+      return el;
    });

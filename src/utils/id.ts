@@ -1,12 +1,16 @@
-import { IObservableState, isObservable } from '../observable/observableState';
-import { elementUpdater } from './_elementUpdater';
+import { type IObservableState, isObservable } from '../observable/observableState';
+import { _elementUpdater } from './_elementUpdater';
 
 export const id = (value: string | IObservableState<string>) =>
-   elementUpdater((el) => {
+   _elementUpdater((el, context) => {
       const setId = (val: string) => (el.id = val);
       if (isObservable(value)) {
-         (value as IObservableState<string>).subscribeImmediate((val: string) => setId(val), el);
+         let unsubscribeCb = (value as IObservableState<string>).subscribeImmediate((val: string) =>
+            setId(val),
+         );
+         context.addUnsibscribeCallback(unsubscribeCb);
       } else {
          setId(value as string);
       }
+      return el;
    });

@@ -1,6 +1,7 @@
-import { type FD, elementUpdater } from './_elementUpdater';
+import { type FD, _elementUpdater } from './_elementUpdater';
 
 export const children = (...content: FD.Element[]) =>
-   elementUpdater((el) => {
+   _elementUpdater((el) => {
       el.append(...content);
+      return el;
    });

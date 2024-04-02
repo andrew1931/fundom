@@ -1,11 +1,8 @@
-import { FD } from '../utils/_elementUpdater';
-import { ObservablesRegistry } from './observableRegistry';
-
 export interface IObservableState<T> {
    current: T;
    next(nextValue: T): void;
-   subscribe(fn: (value: T) => void, el?: FD.Element): () => void;
-   subscribeImmediate(fn: (value: T) => void, el?: FD.Element): () => void;
+   subscribe(fn: (value: T) => void): () => void;
+   subscribeImmediate(fn: (value: T) => void): () => void;
    unsubscribeAll(): void;
 }
 
@@ -13,11 +10,11 @@ export const isObservable = (value: unknown) => value instanceof ObservableState
 
 export class ObservableState<T> implements IObservableState<T> {
    current: T;
-   private name = Symbol('ObservableState');
+
+   private subscribers: Map<number, (value: T) => void> = new Map();
 
    constructor(initialValue: T) {
       this.current = initialValue;
-      ObservablesRegistry.register(this.name);
    }
 
    private generateId(): number {
@@ -25,26 +22,25 @@ export class ObservableState<T> implements IObservableState<T> {
    }
 
    next(nextValue: T): void {
+      if (nextValue === this.current) return;
       this.current = nextValue;
-      ObservablesRegistry.valueFor(this.name)?.forEach((el) =>
-         el.forEach((fn) => fn(this.current)),
-      );
+      this.subscribers.forEach((fn) => fn(this.current));
    }
 
-   subscribe(fn: (value: T) => void, el?: FD.Element): () => void {
-      const id = el || this.generateId();
-      ObservablesRegistry.for(this.name, id, fn);
+   subscribe(fn: (value: T) => void): () => void {
+      const id = this.generateId();
+      this.subscribers.set(id, fn);
       return () => {
-         ObservablesRegistry.clearSubscribers(this.name, id);
+         this.subscribers.delete(id);
       };
    }
 
-   subscribeImmediate(fn: (value: T) => void, el?: FD.Element): () => void {
+   subscribeImmediate(fn: (value: T) => void): () => void {
       fn(this.current);
-      return this.subscribe(fn, el);
+      return this.subscribe(fn);
    }
 
    unsubscribeAll(): void {
-      ObservablesRegistry.unregister(this.name);
+      this.subscribers.clear();
    }
 }

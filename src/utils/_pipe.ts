@@ -1,45 +1,42 @@
-import { type FD, elementUpdater, elementUpdaterAsync } from './_elementUpdater';
+import { _createElement } from './_common';
+import { _PipeContext } from './_context';
+import { type FD } from './_elementUpdater';
 
-export type FunctionsList = ReturnType<typeof elementUpdater | typeof elementUpdaterAsync>[];
+type FunctionsListItem = FD.ElementUpdater | FD.ElementUpdaterAsync;
 
-let hasAsyncFunctions = (functions: FunctionsList): boolean => {
+export type FunctionsList = FunctionsListItem[];
+
+let findFirstAsyncFunction = (functions: FunctionsList): number => {
    const AsyncFunction = (async () => {}).constructor;
-   for (let fn of functions) {
+   for (let [index, fn] of functions.entries()) {
       if (fn instanceof AsyncFunction) {
-         return true;
+         return index;
       }
    }
-   return false;
+   return functions.length;
 };
 
-export const _pipe = (el: FD.Element, functions: FunctionsList): FD.Element => {
-   if (hasAsyncFunctions(functions)) {
-      setTimeout(async () => {
-         for await (const fn of functions) {
-            const res = fn(el);
-            if (res instanceof Promise) {
-               el = await res;
-            } else {
-               el = res;
-            }
+export const _pipe = (element: string | FD.Element, functions: FunctionsList): FD.Element => {
+   let el = _createElement(element);
+
+   let context = _PipeContext.create(el);
+
+   let firstAsyncFnIndex = findFirstAsyncFunction(functions);
+
+   for (let i = 0; i < firstAsyncFnIndex; i++) {
+      el = (functions[i] as FD.ElementUpdater)(el, context);
+   }
+
+   setTimeout(async () => {
+      for (let i = firstAsyncFnIndex; i < functions.length; i++) {
+         const res = (functions[i] as FunctionsListItem)(el, context);
+         if (res instanceof Promise) {
+            el = await res;
+         } else {
+            el = res;
          }
-      }, 0);
-      return el;
-   }
-
-   return (functions as ReturnType<typeof elementUpdater>[]).reduce((prev, cur) => {
-      return cur(prev);
-   }, el);
-};
-
-export const _pipeAsync = async (el: FD.Element, functions: FunctionsList): Promise<FD.Element> => {
-   for await (const fn of functions) {
-      const res = fn(el);
-      if (res instanceof Promise) {
-         el = await res;
-      } else {
-         el = res;
       }
-   }
+   }, 0);
+
    return el;
 };

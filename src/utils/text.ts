@@ -1,10 +1,11 @@
-import { IObservableState } from '../observable/observableState';
-import { elementUpdater } from './_elementUpdater';
+import { type IObservableState } from '../observable/observableState';
+import { _elementUpdater } from './_elementUpdater';
 import { _stringArgsUpdater } from './_stringArgsUpdater';
 
 export const text = (...content: (any | IObservableState<any>)[]) =>
-   elementUpdater((el) => {
-      _stringArgsUpdater(el, content, (val: string) => {
+   _elementUpdater((el, context) => {
+      _stringArgsUpdater(context, content, (val: string) => {
          el.innerText = val;
       });
+      return el;
    });

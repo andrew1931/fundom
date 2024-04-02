@@ -1,24 +1,29 @@
-import { ObservablesRegistry } from '../observable/observableRegistry';
-import type { FD } from './_elementUpdater';
+import { _GlobalContext, type OnRemoveCallback } from './_context';
+import { _elementUpdater, type FD } from './_elementUpdater';
 
-const cleanUpSubscribers = (el: FD.Element): void => {
-   for (let [id, o] of ObservablesRegistry.entries()) {
-      for (let [key] of o.entries()) {
-         if (key instanceof HTMLElement) {
-            // clear subscribers if is target element or a child
-            if (key === el || el.contains(key)) {
-               ObservablesRegistry.clearSubscribers(id, key);
-            }
-         }
-      }
-   }
+const handleRemove = (el: FD.Element): void => {
+   _GlobalContext.findContext(el)?.releaseBeforeRemoveCallbacks();
+   el.remove();
+   _GlobalContext.findContext(el)?.releaseAfterRemoveCallbacks();
 };
 
 export const removeAndCleanUp = (el: FD.Element): void => {
-   el.remove();
-   cleanUpSubscribers(el);
+   handleRemove(el);
+   _GlobalContext.cleanUp(el);
 };
 
-export const removeWithoutCleanUp = (el: FD.Element) => {
-   el.remove();
+export const removeWithoutCleanUp = (el: FD.Element): void => {
+   handleRemove(el);
 };
+
+export const beforeRemove = (...collbacks: OnRemoveCallback[]) =>
+   _elementUpdater((el, context) => {
+      context.addBeforeRemoveCallbacks(collbacks);
+      return el;
+   });
+
+export const afterRemove = (...collbacks: OnRemoveCallback[]) =>
+   _elementUpdater((el, context) => {
+      context.addAfterRemoveCallbacks(collbacks);
+      return el;
+   });

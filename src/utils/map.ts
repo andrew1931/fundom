@@ -1,16 +1,17 @@
-import { IObservableState, isObservable } from '../observable/observableState';
-import { type FD, elementUpdater } from './_elementUpdater';
+import { type IObservableState, isObservable } from '../observable/observableState';
+import { type FD, _elementUpdater } from './_elementUpdater';
 
 export const map = <D>(
    data: D[] | IObservableState<D[]>,
    childCb: (el: D, index: number) => FD.Element,
 ) =>
-   elementUpdater((el) => {
+   _elementUpdater((el, context) => {
       if (isObservable(data)) {
-         (data as IObservableState<D[]>).subscribe((val) => {
+         let unsubscribeCb = (data as IObservableState<D[]>).subscribeImmediate((val) => {
             // TODO: implement map for ObservableState input
             console.log(val);
-         }, el);
+         });
+         context.addUnsibscribeCallback(unsubscribeCb);
       } else {
          if (Array.isArray(data)) {
             data.forEach((item, index) => {
@@ -20,4 +21,5 @@ export const map = <D>(
             console.error('[map]: provided argument is not an array: ', data);
          }
       }
+      return el;
    });
