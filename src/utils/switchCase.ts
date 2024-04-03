@@ -40,7 +40,7 @@ export const switchCase =
             let unsubscribeCb = (value as IObservableState<V>).subscribeImmediate((val) => {
                handleCases(val);
             });
-            context.addUnsibscribeCallback(unsubscribeCb);
+            context.addUnsubscribeCallback(unsubscribeCb);
          } else {
             handleCases(value as V);
          }

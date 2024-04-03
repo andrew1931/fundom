@@ -17,7 +17,7 @@ export const _stringArgsUpdater = (
             output[index] = val;
             updateFn();
          });
-         context.addUnsibscribeCallback(unsubscribeCb);
+         context.addUnsubscribeCallback(unsubscribeCb);
       } else {
          output.push(item as string | number);
       }

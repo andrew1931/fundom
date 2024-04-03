@@ -22,7 +22,7 @@ export const style = (styles: StyleInput) =>
                if (Array.isArray(val[1]) && typeof val[0] === 'function') {
                   val[1].forEach((dep) => {
                      let unsubscribeCb = dep.subscribe(() => updater(val[0]()));
-                     context.addUnsibscribeCallback(unsubscribeCb);
+                     context.addUnsubscribeCallback(unsubscribeCb);
                   });
                } else {
                   console.error(WRONG_ARRAY_TYPE_ERROR);
@@ -43,14 +43,14 @@ export const style = (styles: StyleInput) =>
                });
             },
          );
-         context.addUnsibscribeCallback(unsubscribeCb);
+         context.addUnsubscribeCallback(unsubscribeCb);
       } else {
          Object.entries(styles).forEach(([key, value]) => {
             if (isObservable(value)) {
                let unsubscribeCb = (value as IObservableState<string>).subscribeImmediate((val) => {
                   updateStyle(key, val);
                });
-               context.addUnsibscribeCallback(unsubscribeCb);
+               context.addUnsubscribeCallback(unsubscribeCb);
             } else {
                updateStyle(key, value as string);
             }

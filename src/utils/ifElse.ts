@@ -20,7 +20,7 @@ export const ifElse =
             let unsubscribeCb = (value as IObservableState<V>).subscribeImmediate((val) => {
                handleIf(val);
             });
-            context.addUnsibscribeCallback(unsubscribeCb);
+            context.addUnsubscribeCallback(unsubscribeCb);
          } else {
             handleIf(value as V);
          }

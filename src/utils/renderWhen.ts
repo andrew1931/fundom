@@ -20,7 +20,7 @@ export const renderWhen = (value: IObservableState<boolean> | boolean) =>
             let unsubscribeCb = (value as IObservableState<boolean>).subscribeImmediate((val) => {
                update(val);
             });
-            context.addUnsibscribeCallback(unsubscribeCb);
+            context.addUnsubscribeCallback(unsubscribeCb);
          } else {
             update(value as boolean);
          }

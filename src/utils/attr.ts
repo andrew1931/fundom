@@ -18,14 +18,14 @@ export const attr = (attributes: AttrInput) =>
                });
             },
          );
-         context.addUnsibscribeCallback(unsubscribeCb);
+         context.addUnsubscribeCallback(unsubscribeCb);
       } else {
          Object.entries(attributes).forEach(([key, value]) => {
             if (isObservable(value)) {
                let unsubscribeCb = (value as IObservableState<string>).subscribeImmediate((val) => {
                   updateAttribute(key, val);
                });
-               context.addUnsibscribeCallback(unsubscribeCb);
+               context.addUnsubscribeCallback(unsubscribeCb);
             } else {
                updateAttribute(key, value as string);
             }

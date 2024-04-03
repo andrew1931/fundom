@@ -11,7 +11,7 @@ export const map = <D>(
             // TODO: implement map for ObservableState input
             console.log(val);
          });
-         context.addUnsibscribeCallback(unsubscribeCb);
+         context.addUnsubscribeCallback(unsubscribeCb);
       } else {
          if (Array.isArray(data)) {
             data.forEach((item, index) => {

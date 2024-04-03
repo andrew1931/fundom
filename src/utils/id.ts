@@ -8,7 +8,7 @@ export const id = (value: string | IObservableState<string>) =>
          let unsubscribeCb = (value as IObservableState<string>).subscribeImmediate((val: string) =>
             setId(val),
          );
-         context.addUnsibscribeCallback(unsubscribeCb);
+         context.addUnsubscribeCallback(unsubscribeCb);
       } else {
          setId(value as string);
       }

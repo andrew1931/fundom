@@ -16,7 +16,7 @@ export interface IPipeContext {
    addRef: (refName: string, el: FD.Element) => void;
    findRef: (refName: string) => FD.Element | undefined;
    clearRefs: () => void;
-   addUnsibscribeCallback: (callback: () => void) => void;
+   addUnsubscribeCallback: (callback: () => void) => void;
    releaseUnsubscribeCallbacks: () => void;
 }
 
@@ -108,7 +108,7 @@ export const _PipeContext = ((): IPipeContextHandler => {
             afterRemoveCallbacks.forEach((cb) => cb());
             afterRemoveCallbacks = [];
          },
-         addUnsibscribeCallback: (callback) => {
+         addUnsubscribeCallback: (callback) => {
             unsubscribeCallbacks.push(callback);
          },
          releaseUnsubscribeCallbacks: () => {
