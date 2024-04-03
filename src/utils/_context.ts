@@ -2,22 +2,26 @@ import { type FD } from './_elementUpdater';
 
 export type OnRemoveCallback = (...args: any[]) => any;
 
-export interface IPipeContextHandler {
-   create: (el: FD.Element) => IPipeContext;
-   destroy: (el: FD.Element) => void;
-}
+export type MappedElementsItemValue = [any, FD.Element, number];
 
 export interface IPipeContext {
-   id: symbol;
-   addBeforeRemoveCallbacks: (callbacks: OnRemoveCallback[]) => void;
-   addAfterRemoveCallbacks: (callbacks: OnRemoveCallback[]) => void;
-   releaseBeforeRemoveCallbacks: () => void;
-   releaseAfterRemoveCallbacks: () => void;
+   addOnRemoveCallbacks: (callbacks: OnRemoveCallback[]) => void;
+   releaseOnRemoveCallbacks: () => void;
    addRef: (refName: string, el: FD.Element) => void;
    findRef: (refName: string) => FD.Element | undefined;
    clearRefs: () => void;
    addUnsubscribeCallback: (callback: () => void) => void;
    releaseUnsubscribeCallbacks: () => void;
+   getMappedElementsItem: (key: symbol, trackKey: any) => MappedElementsItemValue | undefined;
+   updateMappedElementsItem: (key: symbol, trackKey: any, value: MappedElementsItemValue) => void;
+   getMappedElementsItemEntries: (key: symbol) => IterableIterator<[any, MappedElementsItemValue]> | [];
+   deleteMappedElementsItem: (key: symbol, trackKey: any) => void;
+   clearMappedElements: () => void;
+}
+
+interface IPipeContextHandler {
+   create: (el: FD.Element) => IPipeContext;
+   destroy: (el: FD.Element) => void;
 }
 
 interface IGlobalContext {
@@ -63,13 +67,14 @@ export const _GlobalContext = ((): IGlobalContext => {
             // clear contexts if is target element or a child of target
             if (el === target || target.contains(el)) {
                context.releaseUnsubscribeCallbacks();
+               context.clearMappedElements();
                context.clearRefs();
                for (let [refName, refEl] of globalRefs.entries()) {
                   if (refEl === el) {
                      globalRefs.delete(refName);
                   }
                }
-               contexts.delete(el);
+               _GlobalContext.removeContext(el);
             }
          }
       },
@@ -78,13 +83,41 @@ export const _GlobalContext = ((): IGlobalContext => {
 
 export const _PipeContext = ((): IPipeContextHandler => {
    let createContext = (): IPipeContext => {
-      let beforeRemoveCallbacks: OnRemoveCallback[] = [];
-      let afterRemoveCallbacks: OnRemoveCallback[] = [];
-      let refs: Map<string, FD.Element> = new Map();
+      let onRemoveCallbacks: OnRemoveCallback[] = [];
       let unsubscribeCallbacks: (() => void)[] = [];
+      let refs: Map<string, FD.Element> = new Map();
+      let prevMappedElements: Map<symbol, Map<any, MappedElementsItemValue>> = new Map();
 
       return {
-         id: Symbol('PipeContext'),
+         getMappedElementsItem: (key: symbol, trackKey: any) => {
+            let target = prevMappedElements.get(key);
+            if (target) {
+               return target.get(trackKey);
+            }
+            return undefined;
+         },
+         updateMappedElementsItem: (key: symbol, trackKey: any, value: MappedElementsItemValue) => {
+            if (!prevMappedElements.has(key)) {
+               prevMappedElements.set(key, new Map());
+            }
+            prevMappedElements.get(key)?.set(trackKey, value);
+         },
+         getMappedElementsItemEntries: (key: symbol) => {
+            let target = prevMappedElements.get(key);
+            if (target) {
+               return target.entries();
+            }
+            return [];
+         },
+         deleteMappedElementsItem: (key: symbol, trackKey: any) => {
+            let target = prevMappedElements.get(key);
+            if (target) {
+               target.delete(trackKey);
+            }
+         },
+         clearMappedElements: () => {
+            prevMappedElements.clear();
+         },
          addRef: (refName: string, el: FD.Element) => {
             refs.set(refName, el);
          },
@@ -94,19 +127,12 @@ export const _PipeContext = ((): IPipeContextHandler => {
          clearRefs: () => {
             refs.clear();
          },
-         addBeforeRemoveCallbacks: (callbacks: OnRemoveCallback[]) => {
-            beforeRemoveCallbacks = beforeRemoveCallbacks.concat(callbacks);
+         addOnRemoveCallbacks: (callbacks: OnRemoveCallback[]) => {
+            onRemoveCallbacks = onRemoveCallbacks.concat(callbacks);
          },
-         addAfterRemoveCallbacks: (callbacks: OnRemoveCallback[]) => {
-            afterRemoveCallbacks = afterRemoveCallbacks.concat(callbacks);
-         },
-         releaseBeforeRemoveCallbacks: () => {
-            beforeRemoveCallbacks.forEach((cb) => cb());
-            beforeRemoveCallbacks = [];
-         },
-         releaseAfterRemoveCallbacks: () => {
-            afterRemoveCallbacks.forEach((cb) => cb());
-            afterRemoveCallbacks = [];
+         releaseOnRemoveCallbacks: () => {
+            onRemoveCallbacks.forEach((cb) => cb());
+            onRemoveCallbacks = [];
          },
          addUnsubscribeCallback: (callback) => {
             unsubscribeCallbacks.push(callback);

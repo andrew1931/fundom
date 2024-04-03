@@ -1,3 +1,5 @@
+import { _uniqueNumber } from '../utils/_common';
+
 export interface IObservableState<T> {
    current: T;
    next(nextValue: T): void;
@@ -17,10 +19,6 @@ export class ObservableState<T> implements IObservableState<T> {
       this.current = initialValue;
    }
 
-   private generateId(): number {
-      return Date.now() + Math.floor(Math.random() * 100);
-   }
-
    next(nextValue: T): void {
       if (nextValue === this.current) return;
       this.current = nextValue;
@@ -28,7 +26,7 @@ export class ObservableState<T> implements IObservableState<T> {
    }
 
    subscribe(fn: (value: T) => void): () => void {
-      const id = this.generateId();
+      const id = _uniqueNumber();
       this.subscribers.set(id, fn);
       return () => {
          this.subscribers.delete(id);

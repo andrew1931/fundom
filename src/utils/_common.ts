@@ -16,3 +16,7 @@ export const _replaceOrAppend = (
 export const _createElement = (element: string | FD.Element): FD.Element => {
    return typeof element === 'string' ? document.createElement(element) : element;
 };
+
+export const _uniqueNumber = (): number => {
+   return Date.now() + Math.floor(Math.random() * 100);
+};
