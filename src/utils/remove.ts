@@ -1,6 +1,6 @@
-import { _GlobalContext, type OnRemoveCallback } from './_context';
+import { type OnRemoveCallback } from './_context';
 import { _elementUpdater, type FD } from './_elementUpdater';
-
+import { _GlobalContext } from './_globalContext';
 
 export const removeAndCleanUp = (el: FD.Element): void => {
    _GlobalContext.findContext(el)?.releaseOnRemoveCallbacks();

@@ -8,20 +8,24 @@ export const trackByKey = (key: string) => () => key;
 export const map = <D extends Record<string, any>>(
    data: D[] | IObservableState<D[]>,
    childCb: (el: D, index: number) => FD.Element,
-   trackBy?: ReturnType<typeof trackByKey>
+   trackBy?: ReturnType<typeof trackByKey>,
 ) =>
-   _elementUpdater((el, context) => {      
+   _elementUpdater((el, context) => {
       if (isObservable(data)) {
          let id = Symbol('MappedItems');
          let unsubscribeCb = (data as IObservableState<D[]>).subscribeImmediate((val: D[]) => {
             let updateId = _uniqueNumber();
             for (let [index, item] of val.entries()) {
-               let  trackKey = index;
+               let trackKey = index;
                if (trackBy) {
                   if (trackBy() in item) {
-                     trackKey = item[trackBy()]
+                     trackKey = item[trackBy()];
                   } else {
-                     console.warn('[map]: item does not have ' + trackBy() + ' key inside, index is used as a fallback');
+                     console.warn(
+                        '[map]: item does not have ' +
+                           trackBy() +
+                           ' key inside, index is used as a fallback',
+                     );
                   }
                }
 
@@ -34,16 +38,15 @@ export const map = <D extends Record<string, any>>(
                   // append new items to context and DOM
                   let child = childCb(item, index);
                   el.appendChild(child);
-                  updatePrevValue([item , child, updateId]);
+                  updatePrevValue([item, child, updateId]);
                } else {
                   if (prevItem[0] !== item) {
                      // replace new items in context and DOM
                      let child = childCb(item, index);
                      prevItem[1].replaceWith(child);
-                     updatePrevValue([item , child, updateId]);
-                  } 
-                  else {
-                     updatePrevValue([prevItem[0] , prevItem[1], updateId]);
+                     updatePrevValue([item, child, updateId]);
+                  } else {
+                     updatePrevValue([prevItem[0], prevItem[1], updateId]);
                   }
                }
             }
