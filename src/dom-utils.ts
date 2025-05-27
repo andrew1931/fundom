@@ -1,4 +1,5 @@
 import {
+   _applyMutations,
    _camelToKebab,
    _handleUtilityIncomingValue,
    _hasChild
@@ -24,14 +25,20 @@ const _populateAppendRemoveChildren = (
    }
 };
 
-export const append = (...elements: AppendRemoveIncomingValues): FunDomUtil => {
+export const append = (...values: AppendRemoveIncomingValues): FunDomUtil => {
    let children: HTMLElement[] = []
    return function childrenAppender(el, snapshot, useRevert, comment, context) {
-      _populateAppendRemoveChildren(children, elements);
+      _populateAppendRemoveChildren(children, values);
 
       for (const child of children) {
          if (useRevert) {
-            remove(...children)(el, snapshot, !useRevert, comment, context);
+            _applyMutations(
+               el,
+               [remove(...children)],
+               snapshot,
+               comment,
+               context
+            );
          } else {
             if (!_hasChild(el, child)) {
                if (comment !== undefined) {
@@ -46,14 +53,20 @@ export const append = (...elements: AppendRemoveIncomingValues): FunDomUtil => {
    };
 };
 
-export const remove = (...elements: AppendRemoveIncomingValues): FunDomUtil => {
+export const remove = (...values: AppendRemoveIncomingValues): FunDomUtil => {
    let children: HTMLElement[] = []
    return function childrenRemover(el, snapshot, useRevert, comment, context) {
-      _populateAppendRemoveChildren(children, elements);
+      _populateAppendRemoveChildren(children, values);
 
       for (const child of children) {
          if (useRevert) {
-            append(...children)(el, snapshot, !useRevert, comment, context);
+            _applyMutations(
+               el,
+               [append(...children)],
+               snapshot,
+               comment,
+               context
+            );
          } else {
             if (_hasChild(el, child)) {
                el.removeChild(child);

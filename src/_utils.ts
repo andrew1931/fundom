@@ -6,6 +6,7 @@ import type {
    FunDomElementContext,
    FunDomElementHistoryEvent
 } from './types';
+import { useFunDomDebug$ } from './utils';
 
 export const FN_TYPE = Symbol('fnType');
 export const FN_TYPE_COMPUTE = Symbol('compute');
@@ -36,17 +37,19 @@ export const _createContext = (nodeName: string): FunDomElementContext => {
    }
 };
 
-const _handleApply = (
+const _callUtilsOnElement = (
    el: HTMLElement,
    fns: FunDomUtil[],
    snapshot: HTMLElement,
    useRevert: boolean,
    comment: Comment | undefined,
-   context: FunDomElementContext
+   context: FunDomElementContext,
 ): void => {
    if (fns.length === 0) return;
    for (let fn of fns) {
-      context.makeHistory({ mutation: fn.name, revert: useRevert });
+      if (useFunDomDebug$()) {
+         context.makeHistory({ mutation: fn.name, revert: useRevert });
+      }
       el = fn.call(this, el, snapshot, useRevert, comment, context);
    }
 };
@@ -56,9 +59,9 @@ export const _applyMutations = (
    fns: FunDomUtil[],
    snapshot: HTMLElement,
    comment: Comment | undefined,
-   context: FunDomElementContext
+   context: FunDomElementContext,
 ) => {
-   _handleApply(el, fns, snapshot, false, comment, context);
+   _callUtilsOnElement(el, fns, snapshot, false, comment, context);
 };
 
 export const _revertMutations = (
@@ -66,9 +69,9 @@ export const _revertMutations = (
    fns: FunDomUtil[],
    snapshot: HTMLElement,
    comment: Comment | undefined,
-   context: FunDomElementContext
+   context: FunDomElementContext,
 ) => {
-   _handleApply(el, fns, snapshot, true, comment, context);
+   _callUtilsOnElement(el, fns, snapshot, true, comment, context);
 };
 
 export const _camelToKebab = (prop: string): string => {

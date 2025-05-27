@@ -72,7 +72,13 @@ export const appendList = <T>(data: Array<T>) => (newElementFn: (item: T) => Ret
    return (el, snapshot, _useRevert, _comment, _context) => {
       _appendComment(el, comment, _comment);
       for (const item of data) {
-         append(newElementFn(item))(el, snapshot, false, comment, _context);
+         _applyMutations(
+            el,
+            [append(newElementFn(item))],
+            snapshot,
+            comment,
+            _context
+         )
       }
       return el;
    };
