@@ -1,4 +1,4 @@
-import { FN_TYPE, FN_TYPE_FUN_STATE_GETTER } from './_utils';
+import { FN_TYPE, FN_TYPE_STATE_GETTER } from './_utils';
 import type { FunStateGetter, FunStateSub } from './types';
 
 export const funState = <T>(initialValue: T): [
@@ -15,7 +15,7 @@ export const funState = <T>(initialValue: T): [
       }
       return value;
    };
-   getter[FN_TYPE] = FN_TYPE_FUN_STATE_GETTER;
+   getter[FN_TYPE] = FN_TYPE_STATE_GETTER;
 
    const setter = (nextValue: T): void => {
       value = nextValue;

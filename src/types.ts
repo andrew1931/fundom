@@ -11,9 +11,22 @@ export type UtilIncomingValue = string | number | FunStateGetter<string | number
 
 export type IfElseCondition<T> = boolean | FunStateGetter<T> | ComputedStateReturnValue;
 
+export type FunDomElementHistoryEvent = Record<string, string | number | boolean>;
+
+export type FunDomElementContext = {
+   makeHistory(event: FunDomElementHistoryEvent): void;
+   registerUtility(id: string): void;
+   hasUtility(id: string): boolean;
+   getInfo(): {
+      history: FunDomElementHistoryEvent[];
+      utilities: string[];
+   };
+};
+
 export type FunDomUtil = (
    el: HTMLElement,
    snapshot: HTMLElement,
    useRevert: boolean,
-   comment?: Comment
+   comment: Comment | undefined,
+   context: FunDomElementContext,
 ) => HTMLElement;

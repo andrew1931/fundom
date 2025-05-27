@@ -1,6 +1,7 @@
 import {
    _appendComment,
    _applyMutations,
+   _createContext,
    _handleIncomingValue,
    _makeSnapshot,
    _randomId,
@@ -12,40 +13,53 @@ import type { IfElseCondition, FunDomUtil } from './types';
 export const createElement = (
    name: string, ...utils: FunDomUtil[]
 ): (...fns: FunDomUtil[]) => HTMLElement => {
-   return (...extraUtils: FunDomUtil[]) => {
+   return function elementCreator(...extraUtils: FunDomUtil[]) {
       const el = document.createElement(name);
-      const snapshot = _makeSnapshot(el);
-      return _applyMutations(el, [...utils, ...extraUtils], snapshot);
+      const context =  _createContext();
+      _applyMutations(
+         el,
+         [...utils, ...extraUtils],
+         _makeSnapshot(el),
+         undefined,
+         context
+      );
+      return el;
    }
 };
 
-// todo: put to some registry
-const ifElseIds: string[] = [];
-
 export const ifElse = <T>(condition: IfElseCondition<T>) => (...fns1: FunDomUtil[]) => (...fns2: FunDomUtil[]): FunDomUtil => {
-   const id = _randomId('ifElse');
+   const id = _randomId('ifElse_');
    const comment = document.createComment('');
-   return (el, _snapshot, _useRevert, _comment) => {
+   return function ifElseResolver(el, _snapshot, _useRevert, _comment, _context) {
       const snapshot = _makeSnapshot(el);
-      function handler(val: unknown, firstHandle = false): HTMLElement {
+      function handler(val: unknown, firstHandle = false): void {
          if (Boolean(val) === true) {
-            return _applyMutations(
-               !firstHandle ? _revertMutations(el, fns2, snapshot, comment) : el,
+            if (!firstHandle) {
+               _revertMutations(el, fns2, snapshot, comment, _context);
+            }
+            _applyMutations(
+               el,
                fns1,
                snapshot,
-               comment
+               comment,
+               _context
+            );
+         } else {
+            if (!firstHandle) {
+               _revertMutations(el, fns1, snapshot, comment, _context);
+            }
+            _applyMutations(
+               el,
+               fns2,
+               snapshot,
+               comment,
+               _context
             );
          }
-         return _applyMutations(
-            !firstHandle ? _revertMutations(el, fns1, snapshot, comment) : el,
-            fns2,
-            snapshot,
-            comment
-         );
       }
 
-      if (ifElseIds.indexOf(id) === -1) {
-         ifElseIds.push(id);
+      if (!_context.hasUtility(id)) {
+         _context.registerUtility(id);
          _appendComment(el, comment, _comment);
          _handleIncomingValue(condition, handler);
       }
@@ -53,23 +67,12 @@ export const ifElse = <T>(condition: IfElseCondition<T>) => (...fns1: FunDomUtil
    }
 };
 
-export const map = <T>(data: Array<T>) => (cb: (item: T) => ReturnType<typeof createElement>): FunDomUtil => {
+export const appendList = <T>(data: Array<T>) => (newElementFn: (item: T) => ReturnType<typeof createElement>): FunDomUtil => {
    const comment = document.createComment('');
-   return (el, snapshot, _useRevert, _comment) => {
+   return (el, snapshot, _useRevert, _comment, _context) => {
       _appendComment(el, comment, _comment);
       for (const item of data) {
-         const newElement = cb(item)();
-         _applyMutations(el, [append(newElement)], snapshot, comment);
-      }
-      return el;
-   };
-};
-
-// for side effects
-export const forEach = <T>(data: Array<T>) => (cb: (item: T) => void): FunDomUtil => {
-   return (el) => {
-      for (const item of data) {
-         cb(item);
+         append(newElementFn(item))(el, snapshot, false, comment, _context);
       }
       return el;
    };

@@ -2,43 +2,73 @@ import type {
    ComputedReturnValue,
    ComputedStateReturnValue,
    FunDomUtil,
-   FunStateGetter
+   FunStateGetter,
+   FunDomElementContext,
+   FunDomElementHistoryEvent
 } from './types';
 
 export const FN_TYPE = Symbol('fnType');
 export const FN_TYPE_COMPUTE = Symbol('compute');
 export const FN_TYPE_COMPUTE_STATE = Symbol('computeState');
-export const FN_TYPE_FUN_STATE_GETTER = Symbol('funStateGetter');
+export const FN_TYPE_STATE_GETTER = Symbol('stateGetter');
+
+export const _createContext = (): FunDomElementContext => {
+   const history: FunDomElementHistoryEvent[] = [];
+   const utilities: string[] = [];
+
+   return {
+      makeHistory(event: FunDomElementHistoryEvent) {
+         history.push(event);
+      },
+      registerUtility(id: string) {
+         utilities.push(id);
+      },
+      hasUtility(id: string) {
+         return utilities.indexOf(id) > -1;
+      },
+      getInfo() {
+         return {
+            history,
+            utilities
+         };
+      }
+   }
+};
 
 const _handleApply = (
    el: HTMLElement,
    fns: FunDomUtil[],
    snapshot: HTMLElement,
-   comment: Comment | undefined,
    useRevert: boolean,
-) => {
+   comment: Comment | undefined,
+   context: FunDomElementContext
+): void => {
+   if (fns.length === 0) return;
+   console.log('fns,', fns)
    for (let fn of fns) {
-      el = fn.call(this, el, snapshot, useRevert, comment);
+      context.makeHistory({ mutation: fn.name, revert: useRevert });
+      el = fn.call(this, el, snapshot, useRevert, comment, context);
    }
-   return el;
 };
 
 export const _applyMutations = (
    el: HTMLElement,
    fns: FunDomUtil[],
    snapshot: HTMLElement,
-   comment?: Comment
-): HTMLElement => {
-   return _handleApply(el, fns, snapshot, comment, false);
+   comment: Comment | undefined,
+   context: FunDomElementContext
+) => {
+   _handleApply(el, fns, snapshot, false, comment, context);
 };
 
 export const _revertMutations = (
    el: HTMLElement,
    fns: FunDomUtil[],
    snapshot: HTMLElement,
-   comment?: Comment
-): HTMLElement => {
-   return _handleApply(el, fns, snapshot, comment, true);
+   comment: Comment | undefined,
+   context: FunDomElementContext
+) => {
+   _handleApply(el, fns, snapshot, true, comment, context);
 };
 
 export const _camelToKebab = (prop: string): string => {
@@ -68,7 +98,7 @@ export const _appendComment = (
 
 export const _isStateGetter = (value: unknown): value is FunStateGetter<unknown> => {
    // @ts-ignore
-   return typeof value === 'function' && value[FN_TYPE] === FN_TYPE_FUN_STATE_GETTER;
+   return typeof value === 'function' && value[FN_TYPE] === FN_TYPE_STATE_GETTER;
 };
 
 const _isComputedUtil = (value: unknown): value is ComputedReturnValue  => {
@@ -97,4 +127,12 @@ export const _handleIncomingValue = (
          handler(value, true);
       }  
    }
+};
+
+export const _hasChild = (
+   parent: HTMLElement,
+   child: HTMLElement,
+): boolean => {
+   // note: probably has better performance than parent.contains(child)
+   return child.parentNode === parent;
 };

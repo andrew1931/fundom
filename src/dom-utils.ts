@@ -1,18 +1,25 @@
-import { _camelToKebab, _handleIncomingValue } from './_utils';
+import { _camelToKebab, _handleIncomingValue, _hasChild } from './_utils';
 import type { UtilIncomingValue, FunDomUtil } from './types';
 
 
-export const append = (...elements: HTMLElement[]): FunDomUtil => {
-   return (el, snapshot, useRevert, comment) => {
-      for (const element of elements) {
+export const append = (...elementFns: (() => HTMLElement)[]): FunDomUtil => {
+   let children: HTMLElement[] = []
+   return function childrenAppender(el, snapshot, useRevert, comment, context) {
+      if (children.length === 0) {
+         for (const elementFn of elementFns) {
+            children.push(elementFn());
+         }
+      }
+      for (const child of children) {
          if (useRevert) {
-            remove(...elements)(el, snapshot, !useRevert, comment);
+            remove(...elementFns)(el, snapshot, !useRevert, comment, context);
          } else {
-            if (comment !== undefined) {
-               console.log('insertBefore>>>', element)
-               el.insertBefore(element, comment);
-            } else {
-               el.appendChild(element);
+            if (!_hasChild(el, child)) {
+               if (comment !== undefined) {
+                  el.insertBefore(child, comment);
+               } else {
+                  el.appendChild(child);
+               }
             }
          }
       }
@@ -20,14 +27,20 @@ export const append = (...elements: HTMLElement[]): FunDomUtil => {
    };
 };
 
-export const remove = (...elements: HTMLElement[]): FunDomUtil => {
-   return (el, snapshot, useRevert, comment) => {
-      for (const element of elements) {
+export const remove = (...elementFns: (() => HTMLElement)[]): FunDomUtil => {
+   let children: HTMLElement[] = []
+   return function childrenRemover(el, snapshot, useRevert, comment, context) {
+      if (children.length === 0) {
+         for (const elementFn of elementFns) {
+            children.push(elementFn());
+         }
+      }
+      for (const child of children) {
          if (useRevert) {
-            append(...elements)(el, snapshot, !useRevert, comment);
+            append(...elementFns)(el, snapshot, !useRevert, comment, context);
          } else {
-            if (el.contains(element)) {
-               el.removeChild(element);
+            if (_hasChild(el, child)) {
+               el.removeChild(child);
             }
          }
       }
@@ -36,7 +49,7 @@ export const remove = (...elements: HTMLElement[]): FunDomUtil => {
 };
 
 export const innerHTML = (value: UtilIncomingValue): FunDomUtil => {
-   return (el, snapshot, useRevert) => {
+   return function innerHtmlMutator(el, snapshot, useRevert) {
       const handler = (val: string | number) => {
          if (useRevert) {
             el.innerHTML = snapshot.innerHTML;
@@ -50,7 +63,7 @@ export const innerHTML = (value: UtilIncomingValue): FunDomUtil => {
 };
 
 export const innerText = (value: UtilIncomingValue): FunDomUtil => {
-   return (el, snapshot, useRevert) => {
+   return function innerTextMutator(el, snapshot, useRevert) {
       const handler = (val: string | number) => {
          if (useRevert) {
             el.innerText = snapshot.innerText;
@@ -64,7 +77,7 @@ export const innerText = (value: UtilIncomingValue): FunDomUtil => {
 };
 
 export const style = (props: Record<string, UtilIncomingValue>): FunDomUtil => {
-   return (el, snapshot, useRevert) => {
+   return function styleMutator(el, snapshot, useRevert) {
       for (const [_key, propValue] of Object.entries(props)) {
          const key = _camelToKebab(_key); 
          const handler = (value: string | number) => {
@@ -88,7 +101,7 @@ export const style = (props: Record<string, UtilIncomingValue>): FunDomUtil => {
 };
 
 export const classList = (...classNames: UtilIncomingValue[]): FunDomUtil => {
-   return (el, snapshot, useRevert) => {
+   return function classlistMutator(el, snapshot, useRevert) {
       for (const className of classNames) {
          let prevAddedValue: string | undefined;
          const handler = (value: string | number) => {
@@ -114,7 +127,7 @@ export const classList = (...classNames: UtilIncomingValue[]): FunDomUtil => {
 };
 
 export const setAttribute = (props: Record<string, UtilIncomingValue>): FunDomUtil => {
-   return (el, snapshot, useRevert) => {
+   return function attributeMutator(el, snapshot, useRevert) {
       for (const [key, propValue] of Object.entries(props)) {
          const handler = (value: string | number) => {
             if (useRevert) {
@@ -137,7 +150,7 @@ export const setAttribute = (props: Record<string, UtilIncomingValue>): FunDomUt
 };
 
 export const addEventListener = (type: string, cb: (e: Event) => void): FunDomUtil => {
-   return (el) => {
+   return function eventListener(el) {
       el.addEventListener(type, cb);
       return el;
    };
