@@ -1,18 +1,37 @@
-import { _camelToKebab, _handleIncomingValue, _hasChild } from './_utils';
-import type { UtilIncomingValue, FunDomUtil } from './types';
+import {
+   _camelToKebab,
+   _handleUtilityIncomingValue,
+   _hasChild
+} from './_utils';
+import type {
+   UtilIncomingValue,
+   FunDomUtil,
+   AppendRemoveIncomingValues
+} from './types';
 
-
-export const append = (...elementFns: (() => HTMLElement)[]): FunDomUtil => {
-   let children: HTMLElement[] = []
-   return function childrenAppender(el, snapshot, useRevert, comment, context) {
-      if (children.length === 0) {
-         for (const elementFn of elementFns) {
-            children.push(elementFn());
+const _populateAppendRemoveChildren = (
+   children: HTMLElement[],
+   elements: AppendRemoveIncomingValues
+) => {
+   if (children.length === 0) {
+      for (const element of elements) {
+         if (typeof element === 'function') {
+            children.push(element());
+         } else {
+            children.push(element);
          }
       }
+   }
+};
+
+export const append = (...elements: AppendRemoveIncomingValues): FunDomUtil => {
+   let children: HTMLElement[] = []
+   return function childrenAppender(el, snapshot, useRevert, comment, context) {
+      _populateAppendRemoveChildren(children, elements);
+
       for (const child of children) {
          if (useRevert) {
-            remove(...elementFns)(el, snapshot, !useRevert, comment, context);
+            remove(...children)(el, snapshot, !useRevert, comment, context);
          } else {
             if (!_hasChild(el, child)) {
                if (comment !== undefined) {
@@ -27,17 +46,14 @@ export const append = (...elementFns: (() => HTMLElement)[]): FunDomUtil => {
    };
 };
 
-export const remove = (...elementFns: (() => HTMLElement)[]): FunDomUtil => {
+export const remove = (...elements: AppendRemoveIncomingValues): FunDomUtil => {
    let children: HTMLElement[] = []
    return function childrenRemover(el, snapshot, useRevert, comment, context) {
-      if (children.length === 0) {
-         for (const elementFn of elementFns) {
-            children.push(elementFn());
-         }
-      }
+      _populateAppendRemoveChildren(children, elements);
+
       for (const child of children) {
          if (useRevert) {
-            append(...elementFns)(el, snapshot, !useRevert, comment, context);
+            append(...children)(el, snapshot, !useRevert, comment, context);
          } else {
             if (_hasChild(el, child)) {
                el.removeChild(child);
@@ -57,7 +73,7 @@ export const innerHTML = (value: UtilIncomingValue): FunDomUtil => {
             el.innerHTML = String(val);
          }
       };
-      _handleIncomingValue(value, handler);
+      _handleUtilityIncomingValue(value, handler);
       return el;
    };
 };
@@ -71,7 +87,7 @@ export const innerText = (value: UtilIncomingValue): FunDomUtil => {
             el.innerText = String(val);
          }
       };
-      _handleIncomingValue(value, handler);
+      _handleUtilityIncomingValue(value, handler);
       return el;
    };
 };
@@ -94,7 +110,7 @@ export const style = (props: Record<string, UtilIncomingValue>): FunDomUtil => {
                el.style.setProperty(key, String(value));
             }
          }
-         _handleIncomingValue(propValue, handler);
+         _handleUtilityIncomingValue(propValue, handler);
       }
       return el;
    };
@@ -120,7 +136,7 @@ export const classList = (...classNames: UtilIncomingValue[]): FunDomUtil => {
                prevAddedValue = classString;
             }
          }
-         _handleIncomingValue(className, handler);
+         _handleUtilityIncomingValue(className, handler);
       }
       return el;
    };
@@ -143,7 +159,7 @@ export const setAttribute = (props: Record<string, UtilIncomingValue>): FunDomUt
                el.setAttribute(key, String(value));
             }
          };
-         _handleIncomingValue(propValue, handler);
+         _handleUtilityIncomingValue(propValue, handler);
       }
       return el;
    };

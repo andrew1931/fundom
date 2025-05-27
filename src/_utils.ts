@@ -12,7 +12,7 @@ export const FN_TYPE_COMPUTE = Symbol('compute');
 export const FN_TYPE_COMPUTE_STATE = Symbol('computeState');
 export const FN_TYPE_STATE_GETTER = Symbol('stateGetter');
 
-export const _createContext = (): FunDomElementContext => {
+export const _createContext = (nodeName: string): FunDomElementContext => {
    const history: FunDomElementHistoryEvent[] = [];
    const utilities: string[] = [];
 
@@ -28,6 +28,7 @@ export const _createContext = (): FunDomElementContext => {
       },
       getInfo() {
          return {
+            nodeName,
             history,
             utilities
          };
@@ -44,7 +45,6 @@ const _handleApply = (
    context: FunDomElementContext
 ): void => {
    if (fns.length === 0) return;
-   console.log('fns,', fns)
    for (let fn of fns) {
       context.makeHistory({ mutation: fn.name, revert: useRevert });
       el = fn.call(this, el, snapshot, useRevert, comment, context);
@@ -80,20 +80,21 @@ export const _makeSnapshot = (el: HTMLElement): HTMLElement => {
 };
 
 export const _randomId = (prefix = ''): string => {
-    return Math.random().toString(36).replace('0.', prefix);
+   return Math.random().toString(36).replace('0.', prefix);
 };
 
 export const _appendComment = (
    el: HTMLElement,
    comment: Comment,
    parentComment: Comment | undefined
-): Comment => {
-   if (parentComment !== undefined) {
-      el.insertBefore(comment, parentComment.nextSibling);
-   } else {
-      el.appendChild(comment);
+): void => {
+   if (!_hasChild(el, comment)) {
+      if (parentComment !== undefined) {
+         el.insertBefore(comment, parentComment.nextSibling);
+      } else {
+         el.appendChild(comment);
+      }
    }
-   return comment;
 };
 
 export const _isStateGetter = (value: unknown): value is FunStateGetter<unknown> => {
@@ -111,7 +112,7 @@ const _isComputedStateUtil = (value: unknown): value is ComputedStateReturnValue
    return typeof value === 'function' && value[FN_TYPE] === FN_TYPE_COMPUTE_STATE;
 };
 
-export const _handleIncomingValue = (
+export const _handleUtilityIncomingValue = (
    value: unknown,
    handler: (val: any, firstHandle: boolean) => void,
 ): void => {
@@ -131,7 +132,7 @@ export const _handleIncomingValue = (
 
 export const _hasChild = (
    parent: HTMLElement,
-   child: HTMLElement,
+   child: HTMLElement | Comment,
 ): boolean => {
    // note: probably has better performance than parent.contains(child)
    return child.parentNode === parent;

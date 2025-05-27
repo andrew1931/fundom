@@ -2,7 +2,7 @@ import {
    _appendComment,
    _applyMutations,
    _createContext,
-   _handleIncomingValue,
+   _handleUtilityIncomingValue,
    _makeSnapshot,
    _randomId,
    _revertMutations,
@@ -15,7 +15,7 @@ export const createElement = (
 ): (...fns: FunDomUtil[]) => HTMLElement => {
    return function elementCreator(...extraUtils: FunDomUtil[]) {
       const el = document.createElement(name);
-      const context =  _createContext();
+      const context =  _createContext(el.nodeName);
       _applyMutations(
          el,
          [...utils, ...extraUtils],
@@ -61,7 +61,7 @@ export const ifElse = <T>(condition: IfElseCondition<T>) => (...fns1: FunDomUtil
       if (!_context.hasUtility(id)) {
          _context.registerUtility(id);
          _appendComment(el, comment, _comment);
-         _handleIncomingValue(condition, handler);
+         _handleUtilityIncomingValue(condition, handler);
       }
       return el;
    }

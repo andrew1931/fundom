@@ -18,6 +18,7 @@ export type FunDomElementContext = {
    registerUtility(id: string): void;
    hasUtility(id: string): boolean;
    getInfo(): {
+      nodeName: string;
       history: FunDomElementHistoryEvent[];
       utilities: string[];
    };
@@ -30,3 +31,5 @@ export type FunDomUtil = (
    comment: Comment | undefined,
    context: FunDomElementContext,
 ) => HTMLElement;
+
+export type AppendRemoveIncomingValues = ((() => HTMLElement) | HTMLElement)[];
