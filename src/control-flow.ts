@@ -10,12 +10,12 @@ import {
    _revertMutations,
 } from './_utils';
 import type {
-   IfElseCondition,
+   Condition,
    FunDomUtil,
    FunStateGetter
 } from './types';
 
-export const createElement = (
+export const element$ = (
    name: string, ...utils: FunDomUtil[]
 ): (...fns: FunDomUtil[]) => HTMLElement => {
    return function elementCreator(...extraUtils: FunDomUtil[]) {
@@ -32,11 +32,11 @@ export const createElement = (
    }
 };
 
-export const appendChildren = (
+export const children$ = (
    ...values: (() => HTMLElement)[] | HTMLElement[]
 ): FunDomUtil => {
    const children: HTMLElement[] = [];
-   return function childrenAppender(el, _snapshot, useRevert, comment) {
+   return function childrenInserter(el, _snapshot, useRevert, comment) {
       if (children.length === 0) {
          for (let element of values) {
             if (typeof element === 'function') {
@@ -64,14 +64,14 @@ export const appendChildren = (
    };
 };
 
-export const appendList = <T>(
+export const list$ = <T>(
    data: Array<T> | FunStateGetter<Array<T>>,
-   newElementFn: (item: T, index: number) => ReturnType<typeof createElement>
+   newElementFn: (item: T, index: number) => ReturnType<typeof element$>
 ): FunDomUtil => {
    const comment = document.createComment('');
    let prevChildren: HTMLElement[] = [];
    let prevItems: Array<T> = [];
-   return (el, snapshot, _useRevert, parentComment, context) => {
+   return function listCreator(el, snapshot, _useRevert, parentComment, context) {
       _appendComment(el, comment, parentComment);
 
       const handler = (items: Array<T>) => {
@@ -88,7 +88,7 @@ export const appendList = <T>(
                   } else {
                      _applyMutations(
                         el,
-                        [appendChildren(child)],
+                        [children$(child)],
                         snapshot,
                         comment,
                         context
@@ -109,7 +109,7 @@ export const appendList = <T>(
             }
             _applyMutations(
                el,
-               [appendChildren(...children)],
+               [children$(...children)],
                snapshot,
                comment,
                context
@@ -126,7 +126,7 @@ export const appendList = <T>(
    };
 };
 
-export const ifElse = <T>(condition: IfElseCondition<T>) => (...fns1: FunDomUtil[]) => (...fns2: FunDomUtil[]): FunDomUtil => {
+export const ifElse$ = <T>(condition: Condition<T>) => (...fns1: FunDomUtil[]) => (...fns2: FunDomUtil[]): FunDomUtil => {
    const id = _randomId('cond_');
    const comment = document.createComment('');
    return function ifElseResolver(el, _snapshot, _useRevert, parentComment, context) {
@@ -166,6 +166,6 @@ export const ifElse = <T>(condition: IfElseCondition<T>) => (...fns1: FunDomUtil
    }
 };
 
-export const onlyIf = <T>(condition: IfElseCondition<T>) => (...fns1: FunDomUtil[]): FunDomUtil => {
-   return ifElse(condition)(...fns1)();
+export const if$ = <T>(condition: Condition<T>) => (...fns1: FunDomUtil[]): FunDomUtil => {
+   return ifElse$(condition)(...fns1)();
 };

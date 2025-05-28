@@ -1,6 +1,6 @@
 import type {
-   ComputedReturnValue,
-   ComputedStateReturnValue,
+   FormatReturnValue,
+   BoolReturnValue,
    FunDomUtil,
    FunStateGetter,
    FunDomElementContext,
@@ -9,8 +9,8 @@ import type {
 import { useFunDomDebug$ } from './utils';
 
 export const FN_TYPE = Symbol('fnType');
-export const FN_TYPE_COMPUTE = Symbol('compute');
-export const FN_TYPE_COMPUTE_STATE = Symbol('computeState');
+export const FN_TYPE_FORMAT = Symbol('format');
+export const FN_TYPE_BOOL = Symbol('bool');
 export const FN_TYPE_STATE_GETTER = Symbol('stateGetter');
 
 export const _createContext = (nodeName: string): FunDomElementContext => {
@@ -105,23 +105,23 @@ export const _isStateGetter = (value: unknown): value is FunStateGetter<unknown>
    return typeof value === 'function' && value[FN_TYPE] === FN_TYPE_STATE_GETTER;
 };
 
-const _isComputedUtil = (value: unknown): value is ComputedReturnValue  => {
+const _isFormatUtil = (value: unknown): value is FormatReturnValue  => {
    // @ts-ignore
-   return typeof value === 'function' && value[FN_TYPE] === FN_TYPE_COMPUTE;
+   return typeof value === 'function' && value[FN_TYPE] === FN_TYPE_FORMAT;
 };
 
-const _isComputedStateUtil = (value: unknown): value is ComputedStateReturnValue  => {
+const _isBoolUtil = (value: unknown): value is BoolReturnValue  => {
    // @ts-ignore
-   return typeof value === 'function' && value[FN_TYPE] === FN_TYPE_COMPUTE_STATE;
+   return typeof value === 'function' && value[FN_TYPE] === FN_TYPE_BOOL;
 };
 
 export const _handleUtilityIncomingValue = (
    value: unknown,
    handler: (val: any, firstHandle: boolean) => void,
 ): void => {
-   if (_isComputedStateUtil(value)) {
+   if (_isBoolUtil(value)) {
       value(handler);
-   } else if (_isComputedUtil(value)) {
+   } else if (_isFormatUtil(value)) {
       value(handler);
    } else {   
       if (_isStateGetter(value)) {

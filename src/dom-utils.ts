@@ -1,7 +1,7 @@
 import { _camelToKebab, _handleUtilityIncomingValue } from './_utils';
 import type { UtilIncomingValue, FunDomUtil } from './types';
 
-export const innerHTML = (value: UtilIncomingValue): FunDomUtil => {
+export const html$ = (value: UtilIncomingValue): FunDomUtil => {
    return function innerHtmlMutator(el, snapshot, useRevert) {
       const handler = (val: string | number) => {
          if (useRevert) {
@@ -15,7 +15,7 @@ export const innerHTML = (value: UtilIncomingValue): FunDomUtil => {
    };
 };
 
-export const innerText = (value: UtilIncomingValue): FunDomUtil => {
+export const text$ = (value: UtilIncomingValue): FunDomUtil => {
    return function innerTextMutator(el, snapshot, useRevert) {
       const handler = (val: string | number) => {
          if (useRevert) {
@@ -29,7 +29,7 @@ export const innerText = (value: UtilIncomingValue): FunDomUtil => {
    };
 };
 
-export const style = (props: Record<string, UtilIncomingValue>): FunDomUtil => {
+export const style$ = (props: Record<string, UtilIncomingValue>): FunDomUtil => {
    return function styleMutator(el, snapshot, useRevert) {
       for (let [_key, propValue] of Object.entries(props)) {
          const key = _camelToKebab(_key); 
@@ -53,7 +53,7 @@ export const style = (props: Record<string, UtilIncomingValue>): FunDomUtil => {
    };
 };
 
-export const classList = (...classNames: UtilIncomingValue[]): FunDomUtil => {
+export const classlist$ = (...classNames: UtilIncomingValue[]): FunDomUtil => {
    return function classlistMutator(el, snapshot, useRevert) {
       for (let className of classNames) {
          let prevAddedValue: string | undefined;
@@ -79,8 +79,8 @@ export const classList = (...classNames: UtilIncomingValue[]): FunDomUtil => {
    };
 };
 
-export const setAttribute = (props: Record<string, UtilIncomingValue>): FunDomUtil => {
-   return function attributeMutator(el, snapshot, useRevert) {
+export const attributes$ = (props: Record<string, UtilIncomingValue>): FunDomUtil => {
+   return function attributesMutator(el, snapshot, useRevert) {
       for (let [key, propValue] of Object.entries(props)) {
          const handler = (value: string | number) => {
             if (useRevert) {
@@ -102,7 +102,7 @@ export const setAttribute = (props: Record<string, UtilIncomingValue>): FunDomUt
    };
 };
 
-export const addEventListener = (type: string, cb: (e: Event) => void): FunDomUtil => {
+export const on$ = (type: string, cb: (e: Event) => void): FunDomUtil => {
    return function eventListener(el) {
       el.addEventListener(type, cb);
       return el;

@@ -1,15 +1,15 @@
 export type FunStateSub<T> = (nextValue: T, ...args: any[]) => void;
 export type FunStateGetter<T> = (subCb?: FunStateSub<T>) => T;
 
-export type IncomingComputedItem = string | number | FunStateGetter<string | number>;
+export type IncomingFormatItem = string | number | FunStateGetter<string | number>;
 
-export type ComputedReturnValue = (handler: (val: string | number, firstHandle: boolean) => void) => void;
+export type FormatReturnValue = (handler: (val: string | number, firstHandle: boolean) => void) => void;
 
-export type ComputedStateReturnValue = (handler: (val: boolean, firstHandle: boolean) => void) => void;
+export type BoolReturnValue = (handler: (val: boolean, firstHandle: boolean) => void) => void;
 
-export type UtilIncomingValue = string | number | FunStateGetter<string | number> | ComputedReturnValue;
+export type UtilIncomingValue = string | number | FunStateGetter<string | number> | FormatReturnValue;
 
-export type IfElseCondition<T> = boolean | FunStateGetter<T> | ComputedStateReturnValue;
+export type Condition<T> = boolean | FunStateGetter<T> | BoolReturnValue;
 
 export type FunDomElementHistoryEvent = Record<string, string | number | boolean>;
 

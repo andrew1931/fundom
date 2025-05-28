@@ -1,33 +1,33 @@
 import {
    _isStateGetter,
    FN_TYPE,
-   FN_TYPE_COMPUTE,
-   FN_TYPE_COMPUTE_STATE
+   FN_TYPE_FORMAT,
+   FN_TYPE_BOOL
 } from './_utils';
 import type {
-   ComputedReturnValue,
-   ComputedStateReturnValue,
-   IncomingComputedItem,
+   FormatReturnValue,
+   BoolReturnValue,
+   IncomingFormatItem,
    FunStateGetter
 } from './types';
 
 
-export const computed$ = (...values: Array<IncomingComputedItem>): ComputedReturnValue => {
-   compute[FN_TYPE] = FN_TYPE_COMPUTE;
-   function compute(
+export const format$ = (...values: Array<IncomingFormatItem>): FormatReturnValue => {
+   format[FN_TYPE] = FN_TYPE_FORMAT;
+   function format(
       handler: (val: string | number, firstHandle: boolean) => void
    ) {
-      const COMPUTE_SPLIT_CHAR = '{}';
+      const SPLIT_CHAR = '{}';
       const result: (string | number)[] = [];
 
       if (values.length < 2) {
-         console.warn('computed$ util needs at least 2 arguments to make sense');
+         console.warn('format$ util needs at least 2 arguments to make sense');
          pushToResult(values[0] ?? '');
          return handler(result.join(''), true);
       }
 
       if (typeof values[0] === 'string') {
-         const splitByBraces = values[0].split(COMPUTE_SPLIT_CHAR);
+         const splitByBraces = values[0].split(SPLIT_CHAR);
          if (splitByBraces.length === values.length) {
             pushToResult(splitByBraces.shift() ?? '');
             for (let i = 1; i < values.length; i++) {
@@ -39,18 +39,18 @@ export const computed$ = (...values: Array<IncomingComputedItem>): ComputedRetur
             }
          } else {
             console.warn(
-               `number of ${COMPUTE_SPLIT_CHAR} in computed$ util is not equal to number of dynamic arguments, falling back to concatenating all`
+               `number of ${SPLIT_CHAR} in format$ util is not equal to number of dynamic arguments, falling back to concatenating all`
             );
             populateResultWithAll();
          }
       } else {
          console.warn(
-            `first argument of computed$ is not a string type, falling back to concatenating all`
+            `first argument of format$ is not a string type, falling back to concatenating all`
          );
          populateResultWithAll();
       }
 
-      function pushToResult(value: IncomingComputedItem) {
+      function pushToResult(value: IncomingFormatItem) {
          if (_isStateGetter(value)) {
             let indexAfterPush = result.length;
             const val = value((v: string | number) => {
@@ -71,14 +71,14 @@ export const computed$ = (...values: Array<IncomingComputedItem>): ComputedRetur
       
       return handler(result.join(''), true);
    }
-   return compute;
+   return format;
 };
 
-export const computedState$ = <T>(
+export const bool$ = <T>(
    stateGetter: FunStateGetter<T>, cb: (val: T) => boolean
-): ComputedStateReturnValue => {
-   computeState[FN_TYPE] = FN_TYPE_COMPUTE_STATE;
-   function computeState(
+): BoolReturnValue => {
+   bool[FN_TYPE] = FN_TYPE_BOOL;
+   function bool(
       handler: (val: boolean, firstHandle: boolean) => void
    ) {
       if (_isStateGetter(stateGetter)) {
@@ -91,5 +91,5 @@ export const computedState$ = <T>(
          return handler(cb(stateGetter), true);
       }
    }
-   return computeState;
+   return bool;
 };
