@@ -22,17 +22,17 @@ export const computed$ = (...values: Array<IncomingComputedItem>): ComputedRetur
 
       if (values.length < 2) {
          console.warn('computed$ util needs at least 2 arguments to make sense');
-         pushToResult(values[0] || '');
+         pushToResult(values[0] ?? '');
          return handler(result.join(''), true);
       }
 
       if (typeof values[0] === 'string') {
          const splitByBraces = values[0].split(COMPUTE_SPLIT_CHAR);
          if (splitByBraces.length === values.length) {
-            pushToResult(splitByBraces.shift() || '');
+            pushToResult(splitByBraces.shift() ?? '');
             for (let i = 1; i < values.length; i++) {
                const value = values[i];
-               pushToResult(value || '');
+               pushToResult(value ?? '');
                if (splitByBraces.length > 0) {
                   pushToResult(splitByBraces.shift() || '');
                }
@@ -64,7 +64,7 @@ export const computed$ = (...values: Array<IncomingComputedItem>): ComputedRetur
       }
 
       function populateResultWithAll() {
-         for (const value of values) {
+         for (let value of values) {
             pushToResult(value);
          }
       }

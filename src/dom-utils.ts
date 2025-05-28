@@ -1,81 +1,5 @@
-import {
-   _applyMutations,
-   _camelToKebab,
-   _handleUtilityIncomingValue,
-   _hasChild
-} from './_utils';
-import type {
-   UtilIncomingValue,
-   FunDomUtil,
-   AppendRemoveIncomingValues
-} from './types';
-
-const _populateAppendRemoveChildren = (
-   children: HTMLElement[],
-   elements: AppendRemoveIncomingValues
-) => {
-   if (children.length === 0) {
-      for (const element of elements) {
-         if (typeof element === 'function') {
-            children.push(element());
-         } else {
-            children.push(element);
-         }
-      }
-   }
-};
-
-export const append = (...values: AppendRemoveIncomingValues): FunDomUtil => {
-   let children: HTMLElement[] = []
-   return function childrenAppender(el, snapshot, useRevert, comment, context) {
-      _populateAppendRemoveChildren(children, values);
-
-      for (const child of children) {
-         if (useRevert) {
-            _applyMutations(
-               el,
-               [remove(...children)],
-               snapshot,
-               comment,
-               context
-            );
-         } else {
-            if (!_hasChild(el, child)) {
-               if (comment !== undefined) {
-                  el.insertBefore(child, comment);
-               } else {
-                  el.appendChild(child);
-               }
-            }
-         }
-      }
-      return el;
-   };
-};
-
-export const remove = (...values: AppendRemoveIncomingValues): FunDomUtil => {
-   let children: HTMLElement[] = []
-   return function childrenRemover(el, snapshot, useRevert, comment, context) {
-      _populateAppendRemoveChildren(children, values);
-
-      for (const child of children) {
-         if (useRevert) {
-            _applyMutations(
-               el,
-               [append(...children)],
-               snapshot,
-               comment,
-               context
-            );
-         } else {
-            if (_hasChild(el, child)) {
-               el.removeChild(child);
-            }
-         }
-      }
-      return el;
-   };
-};
+import { _camelToKebab, _handleUtilityIncomingValue } from './_utils';
+import type { UtilIncomingValue, FunDomUtil } from './types';
 
 export const innerHTML = (value: UtilIncomingValue): FunDomUtil => {
    return function innerHtmlMutator(el, snapshot, useRevert) {
@@ -107,7 +31,7 @@ export const innerText = (value: UtilIncomingValue): FunDomUtil => {
 
 export const style = (props: Record<string, UtilIncomingValue>): FunDomUtil => {
    return function styleMutator(el, snapshot, useRevert) {
-      for (const [_key, propValue] of Object.entries(props)) {
+      for (let [_key, propValue] of Object.entries(props)) {
          const key = _camelToKebab(_key); 
          const handler = (value: string | number) => {
             if (useRevert) {
@@ -131,7 +55,7 @@ export const style = (props: Record<string, UtilIncomingValue>): FunDomUtil => {
 
 export const classList = (...classNames: UtilIncomingValue[]): FunDomUtil => {
    return function classlistMutator(el, snapshot, useRevert) {
-      for (const className of classNames) {
+      for (let className of classNames) {
          let prevAddedValue: string | undefined;
          const handler = (value: string | number) => {
             const classString = String(value);
@@ -157,7 +81,7 @@ export const classList = (...classNames: UtilIncomingValue[]): FunDomUtil => {
 
 export const setAttribute = (props: Record<string, UtilIncomingValue>): FunDomUtil => {
    return function attributeMutator(el, snapshot, useRevert) {
-      for (const [key, propValue] of Object.entries(props)) {
+      for (let [key, propValue] of Object.entries(props)) {
          const handler = (value: string | number) => {
             if (useRevert) {
                if (snapshot.hasAttribute(key)) {

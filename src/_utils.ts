@@ -50,7 +50,7 @@ const _callUtilsOnElement = (
       if (useFunDomDebug$()) {
          context.makeHistory({ mutation: fn.name, revert: useRevert });
       }
-      el = fn.call(this, el, snapshot, useRevert, comment, context);
+      fn.call(this, el, snapshot, useRevert, comment, context);
    }
 };
 
@@ -139,4 +139,12 @@ export const _hasChild = (
 ): boolean => {
    // note: probably has better performance than parent.contains(child)
    return child.parentNode === parent;
+};
+
+export const _removeChildren = (parent: HTMLElement, ...children: HTMLElement[]) => {
+   for (let child of children) {
+      if (_hasChild(parent, child)) {
+         parent.removeChild(child);
+      }
+   }
 };

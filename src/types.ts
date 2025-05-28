@@ -31,5 +31,3 @@ export type FunDomUtil = (
    comment: Comment | undefined,
    context: FunDomElementContext,
 ) => HTMLElement;
-
-export type AppendRemoveIncomingValues = ((() => HTMLElement) | HTMLElement)[];
