@@ -16,15 +16,19 @@
    "author": "andrew1931",
    "license": "ISC",
    "devDependencies": {
+      "@eslint/js": "^9.27.0",
       "@rollup/plugin-commonjs": "^25.0.7",
       "@rollup/plugin-node-resolve": "^15.2.3",
-      "@typescript-eslint/eslint-plugin": "^6.21.0",
-      "@typescript-eslint/parser": "^7.4.0",
-      "eslint": "^8.57.0",
+      "eslint": "^9.27.0",
+      "globals": "^16.2.0",
       "prettier": "^3.2.5",
-      "rollup": "^4.13.0",
+      "rollup": "^4.35.0",
       "rollup-plugin-esbuild": "^6.1.1",
-      "tslib": "^2.6.2",
-      "typescript": "^5.4.3"
+      "typescript": "^5.8.3",
+      "typescript-eslint": "^8.33.0"
+   },
+   "volta": {
+      "node": "20.12.2",
+      "npm": "10.5.0"
    }
 }
