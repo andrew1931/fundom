@@ -1,11 +1,9 @@
 import { FN_TYPE, FN_TYPE_STATE_GETTER } from './_utils';
 import type { FunStateGetter, FunStateSub } from './types';
 
-export const funState = <T>(initialValue: T): [
-   getterCb: FunStateGetter<T>,
-   setterCb: FunStateSub<T>,
-   releaseCb: () => void
-] => {
+export const funState = <T>(
+   initialValue: T,
+): [getterCb: FunStateGetter<T>, setterCb: FunStateSub<T>, releaseCb: () => void] => {
    const subs: FunStateSub<T>[] = [];
    let value: T = initialValue;
 

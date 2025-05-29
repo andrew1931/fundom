@@ -8,32 +8,20 @@ import {
    _randomId,
    _removeChildren,
 } from './_utils';
-import type {
-   UtilIncomingValue,
-   FunDomUtil,
-   FunStateGetter,
-   Condition
-} from './types';
+import type { UtilIncomingValue, FunDomUtil, FunStateGetter, Condition } from './types';
 
 export const element$ = (
-   name: string, ...utils: FunDomUtil[]
-): (...fns: FunDomUtil[]) => HTMLElement => {
+   name: string,
+   ...utils: FunDomUtil[]
+): ((...fns: FunDomUtil[]) => HTMLElement) => {
    return function elementCreator(...extraUtils: FunDomUtil[]) {
       const el = document.createElement(name);
-      _applyMutations(
-         el,
-         [...utils, ...extraUtils],
-         null,
-         null,
-         []
-      );
+      _applyMutations(el, [...utils, ...extraUtils], null, null, []);
       return el;
-   }
+   };
 };
 
-export const children$ = (
-   ...values: (() => HTMLElement)[] | HTMLElement[]
-): FunDomUtil => {
+export const children$ = (...values: (() => HTMLElement)[] | HTMLElement[]): FunDomUtil => {
    const children: HTMLElement[] = [];
    return function childrenInserter(el, snapshot, comment) {
       if (children.length === 0) {
@@ -65,7 +53,7 @@ export const children$ = (
 
 export const list$ = <T>(
    data: Array<T> | FunStateGetter<Array<T>>,
-   newElementFn: (item: T, index: number) => ReturnType<typeof element$>
+   newElementFn: (item: T, index: number) => ReturnType<typeof element$>,
 ): FunDomUtil => {
    const comment = document.createComment('');
    let prevChildren: HTMLElement[] = [];
@@ -85,13 +73,7 @@ export const list$ = <T>(
                   if (i < prevItems.length) {
                      el.replaceChild(child, prevChildren[i] as HTMLElement);
                   } else {
-                     _applyMutations(
-                        el,
-                        [children$(child)],
-                        snapshot,
-                        comment,
-                        context
-                     );
+                     _applyMutations(el, [children$(child)], snapshot, comment, context);
                   }
                }
             }
@@ -101,23 +83,16 @@ export const list$ = <T>(
                   _removeChildren(el, prevChildren[i] as HTMLElement);
                }
             }
-
          } else {
             for (let [i, item] of items.entries()) {
                children.push(newElementFn(item, i)());
             }
-            _applyMutations(
-               el,
-               [children$(...children)],
-               snapshot,
-               comment,
-               context
-            );
+            _applyMutations(el, [children$(...children)], snapshot, comment, context);
          }
-         
+
          prevChildren = children;
          prevItems = items;
-      }
+      };
 
       _handleUtilityIncomingValue(data, handler);
 
@@ -125,39 +100,44 @@ export const list$ = <T>(
    };
 };
 
-export const ifElse$ = <T>(condition: Condition<T>) => (...fns1: FunDomUtil[]) => (...fns2: FunDomUtil[]): FunDomUtil => {
-   const id = _randomId('cond_');
-   const comment = document.createComment('');
-   return function ifElseResolver(el, _parentSnapshot, parentComment, context) {
-      const snapshot = _makeSnapshot(el);
-      function handler(val: unknown, firstHandle = false): void {
-         if (Boolean(val) === true) {
-            if (!firstHandle) {
-               // revert fns2
-               _applyMutations(el, fns2, snapshot, comment, context);
+export const ifElse$ =
+   <T>(condition: Condition<T>) =>
+   (...fns1: FunDomUtil[]) =>
+   (...fns2: FunDomUtil[]): FunDomUtil => {
+      const id = _randomId('cond_');
+      const comment = document.createComment('');
+      return function ifElseResolver(el, _parentSnapshot, parentComment, context) {
+         const snapshot = _makeSnapshot(el);
+         function handler(val: unknown, firstHandle = false): void {
+            if (Boolean(val) === true) {
+               if (!firstHandle) {
+                  // revert fns2
+                  _applyMutations(el, fns2, snapshot, comment, context);
+               }
+               _applyMutations(el, fns1, null, comment, context);
+            } else {
+               if (!firstHandle) {
+                  // revert fns1
+                  _applyMutations(el, fns1, snapshot, comment, context);
+               }
+               _applyMutations(el, fns2, null, comment, context);
             }
-            _applyMutations(el, fns1, null, comment, context);
-         } else {
-            if (!firstHandle) {
-               // revert fns1
-               _applyMutations(el, fns1, snapshot, comment, context);
-            }
-            _applyMutations(el, fns2, null, comment, context);
          }
-      }
 
-      if (context.indexOf(id) === -1) {
-         context.push(id);
-         _appendComment(el, comment, parentComment);
-         _handleUtilityIncomingValue(condition, handler);
-      }
-      return el;
-   }
-};
+         if (context.indexOf(id) === -1) {
+            context.push(id);
+            _appendComment(el, comment, parentComment);
+            _handleUtilityIncomingValue(condition, handler);
+         }
+         return el;
+      };
+   };
 
-export const if$ = <T>(condition: Condition<T>) => (...fns1: FunDomUtil[]): FunDomUtil => {
-   return ifElse$(condition)(...fns1)();
-};
+export const if$ =
+   <T>(condition: Condition<T>) =>
+   (...fns1: FunDomUtil[]): FunDomUtil => {
+      return ifElse$(condition)(...fns1)();
+   };
 
 export const html$ = (value: UtilIncomingValue): FunDomUtil => {
    return function innerHtmlMutator(el, snapshot) {
@@ -190,21 +170,18 @@ export const text$ = (value: UtilIncomingValue): FunDomUtil => {
 export const style$ = (props: Record<string, UtilIncomingValue>): FunDomUtil => {
    return function styleMutator(el, snapshot) {
       for (let [_key, propValue] of Object.entries(props)) {
-         const key = _camelToKebab(_key); 
+         const key = _camelToKebab(_key);
          const handler = (value: string | number) => {
             if (snapshot) {
                if (snapshot.style.getPropertyValue(key) !== '') {
-                  el.style.setProperty(
-                     key,
-                     snapshot.style.getPropertyValue(key)
-                  );
+                  el.style.setProperty(key, snapshot.style.getPropertyValue(key));
                } else {
                   el.style.removeProperty(key);
                }
             } else {
                el.style.setProperty(key, String(value));
             }
-         }
+         };
          _handleUtilityIncomingValue(propValue, handler);
       }
       return el;
@@ -230,7 +207,7 @@ export const classlist$ = (...classNames: UtilIncomingValue[]): FunDomUtil => {
                el.classList.add(classString);
                prevAddedValue = classString;
             }
-         }
+         };
          _handleUtilityIncomingValue(className, handler);
       }
       return el;
@@ -243,10 +220,7 @@ export const attributes$ = (props: Record<string, UtilIncomingValue>): FunDomUti
          const handler = (value: string | number) => {
             if (snapshot) {
                if (snapshot.hasAttribute(key)) {
-                  el.setAttribute(
-                     key,
-                     snapshot.getAttribute(key) || ''
-                  );
+                  el.setAttribute(key, snapshot.getAttribute(key) || '');
                } else {
                   el.removeAttribute(key);
                }

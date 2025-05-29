@@ -3,11 +3,17 @@ export type FunStateGetter<T> = (subCb?: FunStateSub<T>) => T;
 
 export type IncomingFormatItem = string | number | FunStateGetter<string | number>;
 
-export type FormatReturnValue = (handler: (val: string | number, firstHandle: boolean) => void) => void;
+export type FormatReturnValue = (
+   handler: (val: string | number, firstHandle: boolean) => void,
+) => void;
 
 export type BoolReturnValue = (handler: (val: boolean, firstHandle: boolean) => void) => void;
 
-export type UtilIncomingValue = string | number | FunStateGetter<string | number> | FormatReturnValue;
+export type UtilIncomingValue =
+   | string
+   | number
+   | FunStateGetter<string | number>
+   | FormatReturnValue;
 
 export type Condition<T> = boolean | FunStateGetter<T> | BoolReturnValue;
 

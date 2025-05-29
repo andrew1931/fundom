@@ -1,22 +1,14 @@
-import {
-   _isStateGetter,
-   FN_TYPE,
-   FN_TYPE_FORMAT,
-   FN_TYPE_BOOL
-} from './_utils';
+import { _isStateGetter, FN_TYPE, FN_TYPE_FORMAT, FN_TYPE_BOOL } from './_utils';
 import type {
    FormatReturnValue,
    BoolReturnValue,
    IncomingFormatItem,
-   FunStateGetter
+   FunStateGetter,
 } from './types';
-
 
 export const format$ = (...values: Array<IncomingFormatItem>): FormatReturnValue => {
    format[FN_TYPE] = FN_TYPE_FORMAT;
-   function format(
-      handler: (val: string | number, firstHandle: boolean) => void
-   ) {
+   function format(handler: (val: string | number, firstHandle: boolean) => void) {
       const SPLIT_CHAR = '{}';
       const result: (string | number)[] = [];
 
@@ -39,13 +31,13 @@ export const format$ = (...values: Array<IncomingFormatItem>): FormatReturnValue
             }
          } else {
             console.warn(
-               `number of ${SPLIT_CHAR} in format$ util is not equal to number of dynamic arguments, falling back to concatenating all`
+               `number of ${SPLIT_CHAR} in format$ util is not equal to number of dynamic arguments, falling back to concatenating all`,
             );
             populateResultWithAll();
          }
       } else {
          console.warn(
-            `first argument of format$ is not a string type, falling back to concatenating all`
+            `first argument of format$ is not a string type, falling back to concatenating all`,
          );
          populateResultWithAll();
       }
@@ -68,22 +60,21 @@ export const format$ = (...values: Array<IncomingFormatItem>): FormatReturnValue
             pushToResult(value);
          }
       }
-      
+
       return handler(result.join(''), true);
    }
    return format;
 };
 
 export const bool$ = <T>(
-   stateGetter: FunStateGetter<T>, cb: (val: T) => boolean
+   stateGetter: FunStateGetter<T>,
+   cb: (val: T) => boolean,
 ): BoolReturnValue => {
    bool[FN_TYPE] = FN_TYPE_BOOL;
-   function bool(
-      handler: (val: boolean, firstHandle: boolean) => void
-   ) {
+   function bool(handler: (val: boolean, firstHandle: boolean) => void) {
       if (_isStateGetter(stateGetter)) {
          const val = stateGetter((v: T) => {
-            handler(cb(v), false)
+            handler(cb(v), false);
          });
          return handler(cb(val), true);
       } else {

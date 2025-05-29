@@ -1,9 +1,4 @@
-import type {
-   FormatReturnValue,
-   BoolReturnValue,
-   FunDomUtil,
-   FunStateGetter
-} from './types';
+import type { FormatReturnValue, BoolReturnValue, FunDomUtil, FunStateGetter } from './types';
 
 export const FN_TYPE = Symbol('fnType');
 export const FN_TYPE_FORMAT = Symbol('format');
@@ -24,7 +19,7 @@ export const _applyMutations = (
 };
 
 export const _camelToKebab = (prop: string): string => {
-   return prop.replace(/([a-z])([A-Z])/g, "$1-$2").toLowerCase();
+   return prop.replace(/([a-z])([A-Z])/g, '$1-$2').toLowerCase();
 };
 
 export const _makeSnapshot = (el: HTMLElement): HTMLElement => {
@@ -38,7 +33,7 @@ export const _randomId = (prefix = ''): string => {
 export const _appendComment = (
    el: HTMLElement,
    comment: Comment,
-   parentComment: Comment | null
+   parentComment: Comment | null,
 ): void => {
    if (!_hasChild(el, comment)) {
       if (parentComment) {
@@ -54,12 +49,12 @@ export const _isStateGetter = (value: unknown): value is FunStateGetter<unknown>
    return typeof value === 'function' && value[FN_TYPE] === FN_TYPE_STATE_GETTER;
 };
 
-const _isFormatUtil = (value: unknown): value is FormatReturnValue  => {
+const _isFormatUtil = (value: unknown): value is FormatReturnValue => {
    // @ts-ignore
    return typeof value === 'function' && value[FN_TYPE] === FN_TYPE_FORMAT;
 };
 
-const _isBoolUtil = (value: unknown): value is BoolReturnValue  => {
+const _isBoolUtil = (value: unknown): value is BoolReturnValue => {
    // @ts-ignore
    return typeof value === 'function' && value[FN_TYPE] === FN_TYPE_BOOL;
 };
@@ -72,20 +67,17 @@ export const _handleUtilityIncomingValue = (
       value(handler);
    } else if (_isFormatUtil(value)) {
       value(handler);
-   } else {   
+   } else {
       if (_isStateGetter(value)) {
          const val = value((v) => handler(v, false));
          handler(val, true);
       } else {
          handler(value, true);
-      }  
+      }
    }
 };
 
-export const _hasChild = (
-   parent: HTMLElement,
-   child: HTMLElement | Comment,
-): boolean => {
+export const _hasChild = (parent: HTMLElement, child: HTMLElement | Comment): boolean => {
    // note: probably has better performance than parent.contains(child)
    return child.parentNode === parent;
 };
