@@ -2,76 +2,25 @@ import type {
    FormatReturnValue,
    BoolReturnValue,
    FunDomUtil,
-   FunStateGetter,
-   FunDomElementContext,
-   FunDomElementHistoryEvent
+   FunStateGetter
 } from './types';
-import { useFunDomDebug$ } from './utils';
 
 export const FN_TYPE = Symbol('fnType');
 export const FN_TYPE_FORMAT = Symbol('format');
 export const FN_TYPE_BOOL = Symbol('bool');
 export const FN_TYPE_STATE_GETTER = Symbol('stateGetter');
 
-export const _createContext = (nodeName: string): FunDomElementContext => {
-   const history: FunDomElementHistoryEvent[] = [];
-   const utilities: string[] = [];
-
-   return {
-      makeHistory(event: FunDomElementHistoryEvent) {
-         history.push(event);
-      },
-      registerUtility(id: string) {
-         utilities.push(id);
-      },
-      hasUtility(id: string) {
-         return utilities.indexOf(id) > -1;
-      },
-      getInfo() {
-         return {
-            nodeName,
-            history,
-            utilities
-         };
-      }
-   }
-};
-
-const _callUtilsOnElement = (
-   el: HTMLElement,
-   fns: FunDomUtil[],
-   snapshot: HTMLElement,
-   useRevert: boolean,
-   comment: Comment | undefined,
-   context: FunDomElementContext,
-): void => {
-   if (fns.length === 0) return;
-   for (let fn of fns) {
-      if (useFunDomDebug$()) {
-         context.makeHistory({ mutation: fn.name, revert: useRevert });
-      }
-      fn.call(this, el, snapshot, useRevert, comment, context);
-   }
-};
-
 export const _applyMutations = (
    el: HTMLElement,
    fns: FunDomUtil[],
-   snapshot: HTMLElement,
-   comment: Comment | undefined,
-   context: FunDomElementContext,
+   snapshot: HTMLElement | null,
+   comment: Comment | null,
+   context: string[],
 ) => {
-   _callUtilsOnElement(el, fns, snapshot, false, comment, context);
-};
-
-export const _revertMutations = (
-   el: HTMLElement,
-   fns: FunDomUtil[],
-   snapshot: HTMLElement,
-   comment: Comment | undefined,
-   context: FunDomElementContext,
-) => {
-   _callUtilsOnElement(el, fns, snapshot, true, comment, context);
+   if (fns.length === 0) return;
+   for (let fn of fns) {
+      fn.call(this, el, snapshot, comment, context);
+   }
 };
 
 export const _camelToKebab = (prop: string): string => {
@@ -89,10 +38,10 @@ export const _randomId = (prefix = ''): string => {
 export const _appendComment = (
    el: HTMLElement,
    comment: Comment,
-   parentComment: Comment | undefined
+   parentComment: Comment | null
 ): void => {
    if (!_hasChild(el, comment)) {
-      if (parentComment !== undefined) {
+      if (parentComment) {
          el.insertBefore(comment, parentComment.nextSibling);
       } else {
          el.appendChild(comment);

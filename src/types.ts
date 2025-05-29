@@ -13,21 +13,9 @@ export type Condition<T> = boolean | FunStateGetter<T> | BoolReturnValue;
 
 export type FunDomElementHistoryEvent = Record<string, string | number | boolean>;
 
-export type FunDomElementContext = {
-   makeHistory(event: FunDomElementHistoryEvent): void;
-   registerUtility(id: string): void;
-   hasUtility(id: string): boolean;
-   getInfo(): {
-      nodeName: string;
-      history: FunDomElementHistoryEvent[];
-      utilities: string[];
-   };
-};
-
 export type FunDomUtil = (
    el: HTMLElement,
-   snapshot: HTMLElement,
-   useRevert: boolean,
-   comment: Comment | undefined,
-   context: FunDomElementContext,
+   snapshot: HTMLElement | null,
+   comment: Comment | null,
+   context: string[],
 ) => HTMLElement;
