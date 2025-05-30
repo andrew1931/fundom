@@ -5,8 +5,9 @@ import { readdir, unlink } from 'fs/promises';
 import { join } from 'path';
 
 const outputDir = 'dist';
+const name = 'FD';
 
-function cleanup() {
+function cleanupDtsFiles() {
    return {
       name: 'clean-dts',
       async writeBundle() {
@@ -25,7 +26,6 @@ function cleanup() {
    }
 }
 
-const name = 'FD';
 export default [
    {
       input: 'src/index.ts',
@@ -60,7 +60,7 @@ export default [
       }],
       plugins: [
          dts(),
-         cleanup()
+         cleanupDtsFiles()
       ],
    }
 ];
