@@ -14,7 +14,7 @@ export const _applyMutations = (
 ) => {
    if (fns.length === 0) return;
    for (let fn of fns) {
-      fn.call(this, el, snapshot, comment, context);
+      fn(el, snapshot, comment, context);
    }
 };
 
