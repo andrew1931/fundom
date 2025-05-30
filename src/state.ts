@@ -16,12 +16,14 @@ export const funState = <T>(
    getter[FN_TYPE] = FN_TYPE_STATE_GETTER;
 
    const setter = (nextValue: T): void => {
-      value = nextValue;
-      subs.forEach((sub) => sub(value));
+      if (!Object.is(nextValue, value)) {
+         value = nextValue;
+         subs.forEach((sub) => sub(value));
+      }
    };
 
    const release = (): void => {
-      // TODO: impl
+      subs.length = 0;
    };
 
    return [getter, setter, release];

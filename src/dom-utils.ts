@@ -126,6 +126,10 @@ export const ifElse$ =
 
          if (context.indexOf(id) === -1) {
             context.push(id);
+            /* 
+               NOTE: comment is used for appending element before it
+               so it is located in the same order in DOM as it is inside element$ function
+            */
             _appendComment(el, comment, parentComment);
             _handleUtilityIncomingValue(condition, handler);
          }

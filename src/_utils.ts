@@ -19,6 +19,9 @@ export const _applyMutations = (
 };
 
 export const _camelToKebab = (prop: string): string => {
+   if (typeof prop !== 'string') {
+      return '';
+   }
    return prop.replace(/([a-z])([A-Z])/g, '$1-$2').toLowerCase();
 };
 
@@ -49,12 +52,12 @@ export const _isStateGetter = (value: unknown): value is FunStateGetter<unknown>
    return typeof value === 'function' && value[FN_TYPE] === FN_TYPE_STATE_GETTER;
 };
 
-const _isFormatUtil = (value: unknown): value is FormatReturnValue => {
+export const _isFormatUtil = (value: unknown): value is FormatReturnValue => {
    // @ts-ignore
    return typeof value === 'function' && value[FN_TYPE] === FN_TYPE_FORMAT;
 };
 
-const _isBoolUtil = (value: unknown): value is BoolReturnValue => {
+export const _isBoolUtil = (value: unknown): value is BoolReturnValue => {
    // @ts-ignore
    return typeof value === 'function' && value[FN_TYPE] === FN_TYPE_BOOL;
 };
@@ -78,7 +81,7 @@ export const _handleUtilityIncomingValue = (
 };
 
 export const _hasChild = (parent: HTMLElement, child: HTMLElement | Comment): boolean => {
-   // note: probably has better performance than parent.contains(child)
+   // NOTE: probably has better performance than parent.contains(child)
    return child.parentNode === parent;
 };
 
