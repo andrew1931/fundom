@@ -1,5 +1,12 @@
 export type FunStateSub<T> = (nextValue: T, ...args: any[]) => void;
-export type FunStateGetter<T> = (subCb?: FunStateSub<T>) => T;
+export type FunStateOnReleaseEffect = () => void;
+export type FunStateGetter<T> = (
+   subCb?: FunStateSub<T>,
+   releaseEffect?: FunStateOnReleaseEffect,
+) => T;
+export type FunState = <T>(
+   initialValue: T,
+) => [getter: FunStateGetter<T>, setter: FunStateSub<T>, releaser: (sub?: FunStateSub<T>) => void];
 
 export type IncomingFormatItem = string | number | FunStateGetter<string | number>;
 

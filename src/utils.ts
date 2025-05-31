@@ -6,14 +6,14 @@ import type {
    FunStateGetter,
 } from './types';
 
-export const format$ = (...values: Array<IncomingFormatItem>): FormatReturnValue => {
-   format[FN_TYPE] = FN_TYPE_FORMAT;
-   function format(handler: (val: string | number, firstHandle: boolean) => void) {
+export const fmt$ = (...values: Array<IncomingFormatItem>): FormatReturnValue => {
+   formatter[FN_TYPE] = FN_TYPE_FORMAT;
+   function formatter(handler: (val: string | number, firstHandle: boolean) => void) {
       const SPLIT_CHAR = '{}';
       const result: (string | number)[] = [];
 
       if (values.length < 2) {
-         console.warn('format$ util needs at least 2 arguments to make sense');
+         console.warn('fmt$ util needs at least 2 arguments to make sense');
          pushToResult(values[0] ?? '');
          return handler(result.join(''), true);
       }
@@ -31,13 +31,13 @@ export const format$ = (...values: Array<IncomingFormatItem>): FormatReturnValue
             }
          } else {
             console.warn(
-               `number of ${SPLIT_CHAR} in format$ util is not equal to number of dynamic arguments, falling back to concatenating all`,
+               `number of ${SPLIT_CHAR} in fmt$ util is not equal to number of dynamic arguments, falling back to concatenating all`,
             );
             populateResultWithAll();
          }
       } else {
          console.warn(
-            `first argument of format$ is not a string type, falling back to concatenating all`,
+            `first argument of fmt$ is not a string type, falling back to concatenating all`,
          );
          populateResultWithAll();
       }
@@ -63,23 +63,23 @@ export const format$ = (...values: Array<IncomingFormatItem>): FormatReturnValue
 
       return handler(result.join(''), true);
    }
-   return format;
+   return formatter;
 };
 
 export const bool$ = <T>(
    stateGetter: FunStateGetter<T>,
-   cb: (val: T) => boolean,
+   predicate: (val: T) => boolean,
 ): BoolReturnValue => {
    bool[FN_TYPE] = FN_TYPE_BOOL;
    function bool(handler: (val: boolean, firstHandle: boolean) => void) {
       if (_isStateGetter(stateGetter)) {
          const val = stateGetter((v: T) => {
-            handler(cb(v), false);
+            handler(predicate(v), false);
          });
-         return handler(cb(val), true);
+         return handler(predicate(val), true);
       } else {
          console.warn(`${stateGetter} is not of FunStateGetter type, passing it to callback`);
-         return handler(cb(stateGetter), true);
+         return handler(predicate(stateGetter), true);
       }
    }
    return bool;

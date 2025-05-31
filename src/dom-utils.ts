@@ -4,6 +4,7 @@ import {
    _camelToKebab,
    _handleUtilityIncomingValue,
    _hasChild,
+   _isFunction,
    _makeSnapshot,
    _randomId,
    _removeChildren,
@@ -26,7 +27,7 @@ export const children$ = (...values: (() => HTMLElement)[] | HTMLElement[]): Fun
    return function childrenInserter(el, snapshot, comment) {
       if (children.length === 0) {
          for (let element of values) {
-            if (typeof element === 'function') {
+            if (_isFunction(element)) {
                children.push(element());
             } else {
                children.push(element);
@@ -192,7 +193,7 @@ export const style$ = (props: Record<string, UtilIncomingValue>): FunDomUtil => 
    };
 };
 
-export const classlist$ = (...classNames: UtilIncomingValue[]): FunDomUtil => {
+export const class$ = (...classNames: UtilIncomingValue[]): FunDomUtil => {
    return function classlistMutator(el, snapshot) {
       for (let className of classNames) {
          let prevAddedValue: string | undefined;
@@ -218,7 +219,7 @@ export const classlist$ = (...classNames: UtilIncomingValue[]): FunDomUtil => {
    };
 };
 
-export const attributes$ = (props: Record<string, UtilIncomingValue>): FunDomUtil => {
+export const attr$ = (props: Record<string, UtilIncomingValue>): FunDomUtil => {
    return function attributesMutator(el, snapshot) {
       for (let [key, propValue] of Object.entries(props)) {
          const handler = (value: string | number) => {

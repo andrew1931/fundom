@@ -11,9 +11,10 @@ import {
    _handleUtilityIncomingValue,
    _hasChild,
    _removeChildren,
+   _isFunction,
 } from './_utils';
 import { funState } from './state';
-import { format$, bool$ } from './utils';
+import { fmt$, bool$ } from './utils';
 
 describe('testing internal utils', () => {
    test('_applyMutations should call all provided synchronous functions with provided arguments', () => {
@@ -123,8 +124,8 @@ describe('testing internal utils', () => {
 
    test('_isFormatUtil should detect if FormatReturnValue function is passed or not', () => {
       expect(_isFormatUtil(function () {})).toBe(false);
-      expect(_isFormatUtil(format$)).toBe(false);
-      expect(_isFormatUtil(format$('{}', 0))).toBe(true);
+      expect(_isFormatUtil(fmt$)).toBe(false);
+      expect(_isFormatUtil(fmt$('{}', 0))).toBe(true);
    });
 
    test('_isBoolUtil should detect if BoolReturnValue function is passed or not', () => {
@@ -135,10 +136,10 @@ describe('testing internal utils', () => {
    });
 
    test(`_handleUtilityIncomingValue should:
-         - call format$ util if one is passed with passed handler as argument;
+         - call fmt$ util if one is passed with passed handler as argument;
          - call bool$ util if one is passed with passed handler as argument;
          - call passed handler and subscribe to funState with same handler if FunStateGetter is passed;
-         - call passed handler if value is neither FunStateGetter nor bool$ nor format$`, () => {
+         - call passed handler if value is neither FunStateGetter nor bool$ nor fmt$`, () => {
       // TODO: impl
    });
 
@@ -162,5 +163,15 @@ describe('testing internal utils', () => {
       _removeChildren(parent, child1, child2);
       expect(parent.contains(child1)).toBe(false);
       expect(parent.contains(child2)).toBe(false);
+   });
+
+   test('_isFunction should detect if passed argument is a function', () => {
+      expect(_isFunction(() => {})).toBe(true);
+      expect(_isFunction(function () {})).toBe(true);
+      expect(_isFunction('')).toBe(false);
+      expect(_isFunction(null)).toBe(false);
+      expect(_isFunction({})).toBe(false);
+      expect(_isFunction(1)).toBe(false);
+      expect(_isFunction(undefined)).toBe(false);
    });
 });

@@ -49,17 +49,17 @@ export const _appendComment = (
 
 export const _isStateGetter = (value: unknown): value is FunStateGetter<unknown> => {
    // @ts-ignore
-   return typeof value === 'function' && value[FN_TYPE] === FN_TYPE_STATE_GETTER;
+   return _isFunction(value) && value[FN_TYPE] === FN_TYPE_STATE_GETTER;
 };
 
 export const _isFormatUtil = (value: unknown): value is FormatReturnValue => {
    // @ts-ignore
-   return typeof value === 'function' && value[FN_TYPE] === FN_TYPE_FORMAT;
+   return _isFunction(value) && value[FN_TYPE] === FN_TYPE_FORMAT;
 };
 
 export const _isBoolUtil = (value: unknown): value is BoolReturnValue => {
    // @ts-ignore
-   return typeof value === 'function' && value[FN_TYPE] === FN_TYPE_BOOL;
+   return _isFunction(value) && value[FN_TYPE] === FN_TYPE_BOOL;
 };
 
 export const _handleUtilityIncomingValue = (
@@ -92,3 +92,5 @@ export const _removeChildren = (parent: HTMLElement, ...children: HTMLElement[])
       }
    }
 };
+
+export const _isFunction = (value: unknown): value is Function => typeof value === 'function';
