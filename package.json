@@ -15,8 +15,8 @@
       "format": "prettier --write \"**/*.+(js|ts|json)\"",
       "test": "vitest run"
    },
-   "author": "andrew1931",
-   "license": "ISC",
+   "author": "Andrei Kuzmich",
+   "license": "MIT",
    "devDependencies": {
       "@eslint/js": "^9.27.0",
       "@rollup/plugin-terser": "^0.4.4",
