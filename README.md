@@ -1,17 +1,21 @@
 ## Fundom
 
-Lightweight minimalistic library to work with DOM api in declarative way with reactive state
+Lightweight JavaScript library to work with DOM api in declarative way with reactive state in functional style.
+It provides a minimum amount of utils to create, mutate and control flow of HTML elements and a state api for reactive changes.
 
-## Counter example
+## Example
+
+Simple counter
 ```typescript
-   import { element$, text$, fmt$, funState } from 'fundom';
+   import { element$, text$, fmt$, on$, funState } from 'fundom';
 
    const [getCount, setCount] = funState(0);
+
    const counter = element$(
       'button',
-      text$(fmt$('number of clicks: {}', getCount)),
-      on('click', () => setCount(getCount() + 1))
+      text$(fmt$('current value: {}', getCount)),
+      on$('click', () => setCount(getCount() + 1))
    );
 
-   document.body.appendChild(counter())
+   document.body.append(counter());
 ```
