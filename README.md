@@ -3,7 +3,7 @@
 Lightweight minimalistic library to work with DOM api in declarative way with reactive state
 
 ## Counter example
-```tsx
+```typescript
    import { element$, text$, fmt$, funState } from 'fundom';
 
    const [getCount, setCount] = funState(0);

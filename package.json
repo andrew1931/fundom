@@ -10,8 +10,7 @@
       "require": "./dist/index.umd.js"
    },
    "scripts": {
-      "build:types": "npx tsc --emitDeclarationOnly",
-      "build": "npm run build:types && rollup -c",
+      "build": "npx tsc --emitDeclarationOnly && rollup -c",
       "lint": "eslint --ext .ts .",
       "format": "prettier --write \"**/*.+(js|ts|json)\"",
       "test": "vitest run"

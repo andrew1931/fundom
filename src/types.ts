@@ -8,13 +8,17 @@ export type FunState = <T>(
    initialValue: T,
 ) => [getter: FunStateGetter<T>, setter: FunStateSub<T>, releaser: (sub?: FunStateSub<T>) => void];
 
-export type IncomingFormatItem = string | number | FunStateGetter<string | number>;
-
 export type FormatReturnValue = (
    handler: (val: string | number, firstHandle: boolean) => void,
 ) => void;
 
-export type BoolReturnValue = (handler: (val: boolean, firstHandle: boolean) => void) => void;
+export type ComputeReturnValue = (handler: (val: unknown, firstHandle: boolean) => void) => void;
+
+export type IncomingFormatItem =
+   | string
+   | number
+   | FunStateGetter<string | number>
+   | ComputeReturnValue;
 
 export type UtilIncomingValue =
    | string
@@ -22,7 +26,7 @@ export type UtilIncomingValue =
    | FunStateGetter<string | number>
    | FormatReturnValue;
 
-export type Condition<T> = boolean | FunStateGetter<T> | BoolReturnValue;
+export type Condition<T> = boolean | FunStateGetter<T> | ComputeReturnValue;
 
 export type FunDomElementHistoryEvent = Record<string, string | number | boolean>;
 

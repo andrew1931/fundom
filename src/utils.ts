@@ -1,7 +1,14 @@
-import { _isStateGetter, FN_TYPE, FN_TYPE_FORMAT, FN_TYPE_BOOL } from './_utils';
+import {
+   _isStateGetter,
+   FN_TYPE,
+   FN_TYPE_FORMAT,
+   FN_TYPE_COMPUTE,
+   _isComputeUtil,
+   _isFormatUtil,
+} from './_utils';
 import type {
    FormatReturnValue,
-   BoolReturnValue,
+   ComputeReturnValue,
    IncomingFormatItem,
    FunStateGetter,
 } from './types';
@@ -43,8 +50,17 @@ export const fmt$ = (...values: Array<IncomingFormatItem>): FormatReturnValue =>
       }
 
       function pushToResult(value: IncomingFormatItem) {
-         if (_isStateGetter(value)) {
-            let indexAfterPush = result.length;
+         let indexAfterPush = result.length;
+         if (_isComputeUtil(value) || _isFormatUtil(value)) {
+            value((val, firstHandle) => {
+               if (firstHandle) {
+                  result.push(val as string | number);
+               } else {
+                  result[indexAfterPush] = val as string | number;
+                  handler(result.join(''), false);
+               }
+            });
+         } else if (_isStateGetter(value)) {
             const val = value((v: string | number) => {
                result[indexAfterPush] = v;
                handler(result.join(''), false);
@@ -66,21 +82,23 @@ export const fmt$ = (...values: Array<IncomingFormatItem>): FormatReturnValue =>
    return formatter;
 };
 
-export const bool$ = <T>(
+export const comp$ = <T, U>(
    stateGetter: FunStateGetter<T>,
-   predicate: (val: T) => boolean,
-): BoolReturnValue => {
-   bool[FN_TYPE] = FN_TYPE_BOOL;
-   function bool(handler: (val: boolean, firstHandle: boolean) => void) {
+   computer: (val: T) => U,
+): ComputeReturnValue => {
+   compute[FN_TYPE] = FN_TYPE_COMPUTE;
+   function compute(handler: (val: U, firstHandle: boolean) => void) {
       if (_isStateGetter(stateGetter)) {
          const val = stateGetter((v: T) => {
-            handler(predicate(v), false);
+            handler(computer(v), false);
          });
-         return handler(predicate(val), true);
+         handler(computer(val), true);
       } else {
-         console.warn(`${stateGetter} is not of FunStateGetter type, passing it to callback`);
-         return handler(predicate(stateGetter), true);
+         console.warn(
+            `${stateGetter} is not of FunStateGetter type, passing it to computer function`,
+         );
+         handler(computer(stateGetter), true);
       }
    }
-   return bool;
+   return compute;
 };

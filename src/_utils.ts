@@ -1,8 +1,8 @@
-import type { FormatReturnValue, BoolReturnValue, FunDomUtil, FunStateGetter } from './types';
+import type { FormatReturnValue, ComputeReturnValue, FunDomUtil, FunStateGetter } from './types';
 
 export const FN_TYPE = Symbol('fnType');
 export const FN_TYPE_FORMAT = Symbol('format');
-export const FN_TYPE_BOOL = Symbol('bool');
+export const FN_TYPE_COMPUTE = Symbol('compute');
 export const FN_TYPE_STATE_GETTER = Symbol('stateGetter');
 
 export const _applyMutations = (
@@ -48,27 +48,22 @@ export const _appendComment = (
 };
 
 export const _isStateGetter = (value: unknown): value is FunStateGetter<unknown> => {
-   // @ts-ignore
-   return _isFunction(value) && value[FN_TYPE] === FN_TYPE_STATE_GETTER;
+   return _isFunction(value) && (value as any)[FN_TYPE] === FN_TYPE_STATE_GETTER;
 };
 
 export const _isFormatUtil = (value: unknown): value is FormatReturnValue => {
-   // @ts-ignore
-   return _isFunction(value) && value[FN_TYPE] === FN_TYPE_FORMAT;
+   return _isFunction(value) && (value as any)[FN_TYPE] === FN_TYPE_FORMAT;
 };
 
-export const _isBoolUtil = (value: unknown): value is BoolReturnValue => {
-   // @ts-ignore
-   return _isFunction(value) && value[FN_TYPE] === FN_TYPE_BOOL;
+export const _isComputeUtil = (value: unknown): value is ComputeReturnValue => {
+   return _isFunction(value) && (value as any)[FN_TYPE] === FN_TYPE_COMPUTE;
 };
 
 export const _handleUtilityIncomingValue = (
    value: unknown,
    handler: (val: any, firstHandle: boolean) => void,
 ): void => {
-   if (_isBoolUtil(value)) {
-      value(handler);
-   } else if (_isFormatUtil(value)) {
+   if (_isComputeUtil(value) || _isFormatUtil(value)) {
       value(handler);
    } else {
       if (_isStateGetter(value)) {

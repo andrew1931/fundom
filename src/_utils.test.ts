@@ -6,7 +6,7 @@ import {
    _randomId,
    _appendComment,
    _isStateGetter,
-   _isBoolUtil,
+   _isComputeUtil,
    _isFormatUtil,
    _handleUtilityIncomingValue,
    _hasChild,
@@ -14,7 +14,7 @@ import {
    _isFunction,
 } from './_utils';
 import { funState } from './state';
-import { fmt$, bool$ } from './utils';
+import { fmt$, comp$ } from './utils';
 
 describe('testing internal utils', () => {
    test('_applyMutations should call all provided synchronous functions with provided arguments', () => {
@@ -128,18 +128,18 @@ describe('testing internal utils', () => {
       expect(_isFormatUtil(fmt$('{}', 0))).toBe(true);
    });
 
-   test('_isBoolUtil should detect if BoolReturnValue function is passed or not', () => {
+   test('_isComputeUtil should detect if BoolReturnValue function is passed or not', () => {
       const [testGetter] = funState(0);
-      expect(_isBoolUtil(function () {})).toBe(false);
-      expect(_isBoolUtil(bool$)).toBe(false);
-      expect(_isBoolUtil(bool$(testGetter, (v) => v === 0))).toBe(true);
+      expect(_isComputeUtil(function () {})).toBe(false);
+      expect(_isComputeUtil(comp$)).toBe(false);
+      expect(_isComputeUtil(comp$(testGetter, (v) => v === 0))).toBe(true);
    });
 
    test(`_handleUtilityIncomingValue should:
          - call fmt$ util if one is passed with passed handler as argument;
-         - call bool$ util if one is passed with passed handler as argument;
+         - call compute$ util if one is passed with passed handler as argument;
          - call passed handler and subscribe to funState with same handler if FunStateGetter is passed;
-         - call passed handler if value is neither FunStateGetter nor bool$ nor fmt$`, () => {
+         - call passed handler if value is neither FunStateGetter nor comp$ nor fmt$`, () => {
       // TODO: impl
    });
 
