@@ -1,5 +1,5 @@
 import { describe, expect, test, vi } from 'vitest';
-import { elem$, nodes$, list$, ifElse$, html$, txt$ } from './dom-utils';
+import { elem$, nodes$, list$, ifElse$, html$, txt$, on$ } from './dom-utils';
 import { funState } from './state';
 
 describe('testing dom utils', () => {
@@ -294,5 +294,18 @@ describe('testing dom utils', () => {
       setState('updated state');
       txt2(parent, null, null, []);
       expect(parent.innerText).toBe('updated state');
+   });
+
+   test('on$ should register event listener on current element', () => {
+      const callbackStub = vi.fn();
+      const [getUnsubscribe, setUnsubscribe] = funState(false);
+      const elem = elem$('button', on$('click', callbackStub, getUnsubscribe))();
+      expect(callbackStub).toHaveBeenCalledTimes(0);
+      elem.click();
+      elem.click();
+      expect(callbackStub).toHaveBeenCalledTimes(2);
+      setUnsubscribe(true);
+      elem.click();
+      expect(callbackStub).toHaveBeenCalledTimes(2);
    });
 });

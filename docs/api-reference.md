@@ -151,7 +151,6 @@ const div = elem$(
       class$('loading-users')
    )(
       elem$('span', txt$('loaded')),
-      class$('loaded-users')
    )
 );
 document.body.appendChild(div());
@@ -179,18 +178,23 @@ document.body.appendChild(div());
 
 ### on$
 
-**Type:** `(type: string, cb: (e: Event) => void) => FunDomUtil;`
+**Type:** `(type: string, cb: (e: Event) => void, offEvent?: FunStateGetter<boolean>) => FunDomUtil;`
 
-- adds event listener with provided type and callback (types are the same as for addEventListener method of document)
+- adds event listener with provided type and callback (types are the same as for addEventListener method of document);
+- accepts optional FunStateGetter<boolean> to removeEventListener;
 
 ```typescript
-import { elem$, on$ } from 'fundom';
+import { elem$, on$, funState } from 'fundom';
 
-const [getLoading, setLoading] = funState(true);
+const [unsubscribeClick, setUnsubscribeClick] = funState(false);
+
+setTimeout(() => {
+   setUnsubscribeClick(true);
+}, 5000);
 
 const button = elem$(
    'button',
-   on$('click', (e) => console.log(e))
+   on$('click', (e) => console.log(e), unsubscribeClick)
 );
 document.body.appendChild(button());
 ```

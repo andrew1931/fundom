@@ -304,7 +304,11 @@ export const attr$ = (props: Record<string, UtilIncomingValue>): FunDomUtil => {
    };
 };
 
-export const on$ = (type: string, cb: (e: Event) => void): FunDomUtil => {
+export const on$ = (
+   type: string,
+   cb: (e: Event) => void,
+   offEvent?: FunStateGetter<boolean>,
+): FunDomUtil => {
    return (el) => {
       if (!_isHtmlElement(el)) {
          console.warn(new NotHTMLElementError('on$').message);
@@ -312,8 +316,13 @@ export const on$ = (type: string, cb: (e: Event) => void): FunDomUtil => {
       }
 
       el.addEventListener(type, cb);
+
+      if (offEvent) {
+         offEvent(() => {
+            el.removeEventListener(type, cb);
+         });
+      }
+
       return el;
    };
 };
-
-// TODO: come up with the way to remove event listeners without storing callbacks
