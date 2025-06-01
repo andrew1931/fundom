@@ -16,7 +16,7 @@ function cleanupDtsFiles() {
             if (
                entry.isFile() &&
                entry.name.endsWith('.d.ts') &&
-               entry.name !== 'index.d.ts'
+               entry.name !== 'index.esm.d.ts'
             ) {
                const fullPath = join(outputDir, entry.name);
                await unlink(fullPath);
@@ -55,7 +55,7 @@ export default [
    {
       input: `${outputDir}/index.d.ts`,
       output: [{
-         file: `${outputDir}/index.d.ts`,
+         file: `${outputDir}/index.esm.d.ts`,
          format: 'es'
       }],
       plugins: [

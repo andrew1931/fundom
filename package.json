@@ -14,7 +14,7 @@
    "scripts": {
       "build": "npx tsc --emitDeclarationOnly && rollup -c",
       "lint": "eslint --ext .ts .",
-      "format": "prettier --write \"**/*.+(js|ts|json)\"",
+      "format": "prettier --write \"**/*.+(js|ts|json|html|css)\"",
       "test": "vitest run"
    },
    "devDependencies": {

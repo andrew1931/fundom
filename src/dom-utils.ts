@@ -11,20 +11,20 @@ import {
 } from './_utils';
 import type { UtilIncomingValue, FunDomUtil, FunStateGetter, Condition } from './types';
 
-export const element$ = (
+export const elem$ = (
    name: string,
    ...utils: FunDomUtil[]
 ): ((...fns: FunDomUtil[]) => HTMLElement) => {
-   return function elementCreator(...extraUtils: FunDomUtil[]) {
+   return (...extraUtils: FunDomUtil[]) => {
       const el = document.createElement(name);
       _applyMutations(el, [...utils, ...extraUtils], null, null, []);
       return el;
    };
 };
 
-export const children$ = (...values: (() => HTMLElement)[] | HTMLElement[]): FunDomUtil => {
+export const nodes$ = (...values: (() => HTMLElement)[] | HTMLElement[]): FunDomUtil => {
    const children: HTMLElement[] = [];
-   return function childrenInserter(el, snapshot, comment) {
+   return (el, snapshot, comment) => {
       if (children.length === 0) {
          for (let element of values) {
             if (_isFunction(element)) {
@@ -54,12 +54,12 @@ export const children$ = (...values: (() => HTMLElement)[] | HTMLElement[]): Fun
 
 export const list$ = <T>(
    data: Array<T> | FunStateGetter<Array<T>>,
-   newElementFn: (item: T, index: number) => ReturnType<typeof element$>,
+   newElementFn: (item: T, index: number) => ReturnType<typeof elem$>,
 ): FunDomUtil => {
    const comment = document.createComment('');
    let prevChildren: HTMLElement[] = [];
    let prevItems: Array<T> = [];
-   return function listCreator(el, snapshot, parentComment, context) {
+   return (el, snapshot, parentComment, context) => {
       _appendComment(el, comment, parentComment);
 
       const handler = (items: Array<T>) => {
@@ -74,7 +74,7 @@ export const list$ = <T>(
                   if (i < prevItems.length) {
                      el.replaceChild(child, prevChildren[i] as HTMLElement);
                   } else {
-                     _applyMutations(el, [children$(child)], snapshot, comment, context);
+                     _applyMutations(el, [nodes$(child)], snapshot, comment, context);
                   }
                }
             }
@@ -88,7 +88,7 @@ export const list$ = <T>(
             for (let [i, item] of items.entries()) {
                children.push(newElementFn(item, i)());
             }
-            _applyMutations(el, [children$(...children)], snapshot, comment, context);
+            _applyMutations(el, [nodes$(...children)], snapshot, comment, context);
          }
 
          prevChildren = children;
@@ -107,7 +107,7 @@ export const ifElse$ =
    (...fns2: FunDomUtil[]): FunDomUtil => {
       const id = _randomId('cond_');
       const comment = document.createComment('');
-      return function ifElseResolver(el, _parentSnapshot, parentComment, context) {
+      return (el, _parentSnapshot, parentComment, context) => {
          const snapshot = _makeSnapshot(el);
          function handler(val: unknown, firstHandle = false): void {
             if (Boolean(val) === true) {
@@ -145,7 +145,7 @@ export const if$ =
    };
 
 export const html$ = (value: UtilIncomingValue): FunDomUtil => {
-   return function innerHtmlMutator(el, snapshot) {
+   return (el, snapshot) => {
       const handler = (val: string | number) => {
          if (snapshot) {
             el.innerHTML = snapshot.innerHTML;
@@ -159,7 +159,7 @@ export const html$ = (value: UtilIncomingValue): FunDomUtil => {
 };
 
 export const text$ = (value: UtilIncomingValue): FunDomUtil => {
-   return function innerTextMutator(el, snapshot) {
+   return (el, snapshot) => {
       const handler = (val: string | number) => {
          if (snapshot) {
             el.innerText = snapshot.innerText;
@@ -173,7 +173,7 @@ export const text$ = (value: UtilIncomingValue): FunDomUtil => {
 };
 
 export const style$ = (props: Record<string, UtilIncomingValue>): FunDomUtil => {
-   return function styleMutator(el, snapshot) {
+   return (el, snapshot) => {
       for (let [_key, propValue] of Object.entries(props)) {
          const key = _camelToKebab(_key);
          const handler = (value: string | number) => {
@@ -194,7 +194,7 @@ export const style$ = (props: Record<string, UtilIncomingValue>): FunDomUtil => 
 };
 
 export const class$ = (...classNames: UtilIncomingValue[]): FunDomUtil => {
-   return function classlistMutator(el, snapshot) {
+   return (el, snapshot) => {
       for (let className of classNames) {
          let prevAddedValue: string | undefined;
          const handler = (value: string | number) => {
@@ -220,7 +220,7 @@ export const class$ = (...classNames: UtilIncomingValue[]): FunDomUtil => {
 };
 
 export const attr$ = (props: Record<string, UtilIncomingValue>): FunDomUtil => {
-   return function attributesMutator(el, snapshot) {
+   return (el, snapshot) => {
       for (let [key, propValue] of Object.entries(props)) {
          const handler = (value: string | number) => {
             if (snapshot) {
@@ -240,7 +240,7 @@ export const attr$ = (props: Record<string, UtilIncomingValue>): FunDomUtil => {
 };
 
 export const on$ = (type: string, cb: (e: Event) => void): FunDomUtil => {
-   return function eventListener(el) {
+   return (el) => {
       el.addEventListener(type, cb);
       return el;
    };
