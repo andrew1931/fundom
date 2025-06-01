@@ -5,9 +5,11 @@ import {
    _handleUtilityIncomingValue,
    _hasChild,
    _isFunction,
+   _isHtmlElement,
    _makeSnapshot,
    _randomId,
    _removeChildren,
+   NotHTMLElementError,
 } from './_utils';
 import type { UtilIncomingValue, FunDomUtil, FunStateGetter, Condition } from './types';
 
@@ -25,20 +27,39 @@ export const elem$ = (
 export const nodes$ = (...values: (() => HTMLElement)[] | HTMLElement[]): FunDomUtil => {
    const children: HTMLElement[] = [];
    return (el, snapshot, comment) => {
+      if (!_isHtmlElement(el)) {
+         console.warn(new NotHTMLElementError('nodes$').message);
+         return el;
+      }
+
+      // TODO: think of how not to invoke create element fn if snapshot is passed and children array is empty but el.children length > 0
+      if (snapshot && el.children.length === 0) {
+         return el; // nothing to revert
+      }
+
       if (children.length === 0) {
          for (let element of values) {
             if (_isFunction(element)) {
-               children.push(element());
+               const el = element();
+               if (_isHtmlElement(el)) {
+                  children.push(el);
+               } else {
+                  console.warn('[nodes$] passed function does not return HTMLElement type');
+               }
             } else {
-               children.push(element);
+               if (_isHtmlElement(element)) {
+                  children.push(element);
+               } else {
+                  console.warn('[nodes$] passed argument is not HTMLElement type');
+               }
             }
          }
       }
 
-      for (let child of children) {
-         if (snapshot) {
-            _removeChildren(el, ...children);
-         } else {
+      if (snapshot) {
+         _removeChildren(el, ...children);
+      } else {
+         for (let child of children) {
             if (!_hasChild(el, child)) {
                if (comment !== undefined) {
                   el.insertBefore(child, comment);
@@ -60,9 +81,23 @@ export const list$ = <T>(
    let prevChildren: HTMLElement[] = [];
    let prevItems: Array<T> = [];
    return (el, snapshot, parentComment, context) => {
+      if (!_isHtmlElement(el)) {
+         console.warn(new NotHTMLElementError('list$').message);
+         return el;
+      }
+
       _appendComment(el, comment, parentComment);
 
       const handler = (items: Array<T>) => {
+         if (!Array.isArray(items)) {
+            console.warn('[list$] first argument of list$ should be Array');
+            return;
+         }
+         if (!_isFunction(newElementFn)) {
+            console.warn('[list$] second argument of list$ should be ReturnType<typeof elem$>');
+            return;
+         }
+
          const children: HTMLElement[] = [];
          if (prevItems.length > 0) {
             for (let [i, item] of items.entries()) {
@@ -108,6 +143,11 @@ export const ifElse$ =
       const id = _randomId('cond_');
       const comment = document.createComment('');
       return (el, _parentSnapshot, parentComment, context) => {
+         if (!_isHtmlElement(el)) {
+            console.warn(new NotHTMLElementError('ifElse$').message);
+            return el;
+         }
+
          const snapshot = _makeSnapshot(el);
          function handler(val: unknown, firstHandle = false): void {
             if (Boolean(val) === true) {
@@ -129,7 +169,7 @@ export const ifElse$ =
             context.push(id);
             /* 
                NOTE: comment is used for appending element before it
-               so it is located in the same order in DOM as it is inside element$ function
+               so it is located in the same order in DOM as it is inside elem$ function
             */
             _appendComment(el, comment, parentComment);
             _handleUtilityIncomingValue(condition, handler);
@@ -146,6 +186,11 @@ export const if$ =
 
 export const html$ = (value: UtilIncomingValue): FunDomUtil => {
    return (el, snapshot) => {
+      if (!_isHtmlElement(el)) {
+         console.warn(new NotHTMLElementError('html$').message);
+         return el;
+      }
+
       const handler = (val: string | number) => {
          if (snapshot) {
             el.innerHTML = snapshot.innerHTML;
@@ -158,8 +203,13 @@ export const html$ = (value: UtilIncomingValue): FunDomUtil => {
    };
 };
 
-export const text$ = (value: UtilIncomingValue): FunDomUtil => {
+export const txt$ = (value: UtilIncomingValue): FunDomUtil => {
    return (el, snapshot) => {
+      if (!_isHtmlElement(el)) {
+         console.warn(new NotHTMLElementError('txt$').message);
+         return el;
+      }
+
       const handler = (val: string | number) => {
          if (snapshot) {
             el.innerText = snapshot.innerText;
@@ -174,6 +224,11 @@ export const text$ = (value: UtilIncomingValue): FunDomUtil => {
 
 export const style$ = (props: Record<string, UtilIncomingValue>): FunDomUtil => {
    return (el, snapshot) => {
+      if (!_isHtmlElement(el)) {
+         console.warn(new NotHTMLElementError('style$').message);
+         return el;
+      }
+
       for (let [_key, propValue] of Object.entries(props)) {
          const key = _camelToKebab(_key);
          const handler = (value: string | number) => {
@@ -195,6 +250,11 @@ export const style$ = (props: Record<string, UtilIncomingValue>): FunDomUtil => 
 
 export const class$ = (...classNames: UtilIncomingValue[]): FunDomUtil => {
    return (el, snapshot) => {
+      if (!_isHtmlElement(el)) {
+         console.warn(new NotHTMLElementError('class$').message);
+         return el;
+      }
+
       for (let className of classNames) {
          let prevAddedValue: string | undefined;
          const handler = (value: string | number) => {
@@ -221,6 +281,11 @@ export const class$ = (...classNames: UtilIncomingValue[]): FunDomUtil => {
 
 export const attr$ = (props: Record<string, UtilIncomingValue>): FunDomUtil => {
    return (el, snapshot) => {
+      if (!_isHtmlElement(el)) {
+         console.warn(new NotHTMLElementError('attr$').message);
+         return el;
+      }
+
       for (let [key, propValue] of Object.entries(props)) {
          const handler = (value: string | number) => {
             if (snapshot) {
@@ -241,6 +306,11 @@ export const attr$ = (props: Record<string, UtilIncomingValue>): FunDomUtil => {
 
 export const on$ = (type: string, cb: (e: Event) => void): FunDomUtil => {
    return (el) => {
+      if (!_isHtmlElement(el)) {
+         console.warn(new NotHTMLElementError('on$').message);
+         return el;
+      }
+
       el.addEventListener(type, cb);
       return el;
    };

@@ -89,3 +89,12 @@ export const _removeChildren = (parent: HTMLElement, ...children: HTMLElement[])
 };
 
 export const _isFunction = (value: unknown): value is Function => typeof value === 'function';
+
+export const _isHtmlElement = (el: unknown) => el && el instanceof HTMLElement;
+
+export class NotHTMLElementError extends Error {
+   constructor(origin: string) {
+      super();
+      this.message = `value passed to ${origin} is not HTMLElement type`;
+   }
+}
