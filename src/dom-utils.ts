@@ -315,3 +315,5 @@ export const on$ = (type: string, cb: (e: Event) => void): FunDomUtil => {
       return el;
    };
 };
+
+// TODO: come up with the way to remove event listeners without storing callbacks

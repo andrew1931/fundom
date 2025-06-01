@@ -7,13 +7,13 @@ It provides a minimum amount of utils to create, mutate and control flow of HTML
 
 Simple counter
 ```typescript
-   import { element$, text$, fmt$, on$, funState } from 'fundom';
+   import { elem$, txt$, fmt$, on$, funState } from 'fundom';
 
    const [getCount, setCount] = funState(0);
 
-   const counter = element$(
+   const counter = elem$(
       'button',
-      text$(fmt$('current value: {}', getCount)),
+      txt$(fmt$('current value: {}', getCount)),
       on$('click', () => setCount(getCount() + 1))
    );
 

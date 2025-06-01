@@ -1,0 +1,196 @@
+## DOM utils
+
+### elem$
+
+**Type:** `(name: string, ...utils: FunDomUtil[]) => ((...fns: FunDomUtil[]) => HTMLElement);`
+
+- creates HTML element;
+- accepts type of element as first argument and any number of dom utils from this reference to mutate element's state, returns a function which accepts more dom utils (made for extending elements) and returns created element;
+```typescript
+import { elem$ } from 'fundom';
+
+const title = elem$('h1');
+document.body.appendChild(title());
+```
+
+### txt$
+
+**Type:** `(value: string | number | FunStateGetter<string | number> | FormatReturnValue) => FunDomUtil;`
+
+- sets innerText value on current element;
+- accepts string / number / FunStateGetter with string or number;
+
+```typescript
+import { elem$, txt$ } from 'fundom';
+
+const title = elem$('h1', txt$('Api reference'));
+document.body.appendChild(title());
+```
+
+### html$
+
+**Type:** `(value: string | number | FunStateGetter<string | number> | FormatReturnValue) => FunDomUtil;`
+
+- sets innerHTML value on current element;
+- accepts string / number / FunStateGetter with string or number;
+
+```typescript
+import { elem$, html$ } from 'fundom';
+
+const title = elem$('h1', html$('<span>Api reference</span>'));
+document.body.appendChild(title());
+```
+
+### nodes$
+
+**Type:** `(() => HTMLElement)[] | HTMLElement[]) => FunDomUtil;`
+
+- inserts passed HTML elements into current element;
+- accepts any number of elem$ functions or HTML elements to be inserted into current element;
+```typescript
+import { elem$, nodes$ } from 'fundom';
+
+const section = elem$(
+   'section',
+   nodes$(
+      elem$('p', txt$('first child')), // can be function
+      elem$('p')(txt$('second child')) // or HTMLElement
+   )
+);
+document.body.appendChild(section());
+```
+
+### list$
+
+**Type:** `<T>(data: Array<T> | FunStateGetter<Array<T>>, newElementFn: (item: T, index: number) => ReturnType<typeof elem$>) => FunDomUtil;`
+
+- inserts list of HTML elements into current element by passed array;
+- accepts array of items / FunStateGetter with array of items and function which should return elem$ utility which is called on every element of provided array
+```typescript
+import { elem$, nodes$, list$ } from 'fundom';
+
+const data = [{ value: 'one' }, { value: 'two' }];
+
+const section = elem$(
+   'section',
+   list$(data, (item, index) => {
+      return elem$('p', txt$(item.value))
+   })
+);
+document.body.appendChild(section());
+```
+
+### style$
+
+**Type:** `(props: Record<string, string | number | FunStateGetter<string | number> | FormatReturnValue;>) => FunDomUtil;`
+
+- applies inline styles to current element;
+- style keys can be passed either in camel or kebab case;
+
+```typescript
+import { elem$, style$ } from 'fundom';
+
+const section = elem$(
+   'section',
+   style$({
+      fontSize: '1em',
+      backgroundColor: '#f2f2f2',
+      'padding-top': '10px' // can be paddingTop as well
+   })
+);
+document.body.appendChild(section());
+```
+
+### class$
+
+**Type:** `(...(string | number | FunStateGetter<string | number> | FormatReturnValue)) => FunDomUtil;`
+
+- adds classes to current element;
+
+```typescript
+import { elem$, class$ } from 'fundom';
+
+const section = elem$(
+   'section',
+   class$('padding-md', 'flex', 'justify-top')
+);
+document.body.appendChild(section());
+```
+
+### attr$
+
+**Type:** `(props: Record<string, string | number | FunStateGetter<string | number> | FormatReturnValue;>) => FunDomUtil;`
+
+- adds attributes to current element;
+
+```typescript
+import { elem$, attr$ } from 'fundom';
+
+const input = elem$(
+   'input',
+   attr$({ type: 'search', name: 'search-user' })
+);
+document.body.appendChild(input());
+```
+
+### ifElse$
+
+**Type:** `<T>(condition: Condition<T>) => (...fns1: FunDomUtil[]) => (...fns2: FunDomUtil[]) => FunDomUtil;`
+
+- applies utilities from second function and reverts utilities from third function if condition is truthy or the other way around;
+
+```typescript
+import { elem$, ifElse$, class$, funState } from 'fundom';
+
+const [getLoading, setLoading] = funState(true);
+
+const div = elem$(
+   'div',
+   ifElse$(getLoading)(
+      elem$('span', txt$('loading...')),
+      class$('loading-users')
+   )(
+      elem$('span', txt$('loaded')),
+      class$('loaded-users')
+   )
+);
+document.body.appendChild(div());
+```
+
+### if$
+
+**Type:** `<T>(condition: Condition<T>) => (...fns1: FunDomUtil[]) => FunDomUtil;`
+
+- applies utilities from second function if condition is truthy or reverts them otherwise;
+
+```typescript
+import { elem$, if$, class$, funState } from 'fundom';
+
+const [getLoading, setLoading] = funState(true);
+
+const div = elem$(
+   'div',
+   if$(getLoading)(
+      class$('loading-users')
+   )
+);
+document.body.appendChild(div());
+```
+
+### on$
+
+**Type:** `(type: string, cb: (e: Event) => void) => FunDomUtil;`
+
+- adds event listener with provided type and callback (types are the same as for addEventListener method of document)
+
+```typescript
+import { elem$, on$ } from 'fundom';
+
+const [getLoading, setLoading] = funState(true);
+
+const button = elem$(
+   'button',
+   on$('click', (e) => console.log(e))
+);
+document.body.appendChild(button());
+```
