@@ -5,7 +5,8 @@
 **Type:** `(name: string, ...utils: FunDomUtil[]) => ((...fns: FunDomUtil[]) => HTMLElement);`
 
 - creates HTML element;
-- accepts type of element as first argument and any number of dom utils from this reference to mutate element's state, returns a function which accepts more dom utils (made for extending elements) and returns created element;
+- works like a pipe;
+- accepts type of element as first argument and any number of dom utils from this reference to mutate its state, returns a function which accepts more dom utils (made for extending elements) and returns created element;
 ```typescript
 import { elem$ } from 'fundom';
 
@@ -206,7 +207,7 @@ const [getCount, setCount] = funState({ count: 1 });
 
 const button = elem$(
    'button',
-   on$('click', () => setCount(getCount() + 1))
+   on$('click', () => setCount({ count: getCount().count + 1 })
    if$(comp$(getCount, (val) => val.count > 5))(
       attr$({ disabled: 'disabled' })
    )
@@ -222,7 +223,7 @@ const button = elem$(
 ```typescript
 import { elem$, txt$, comp$, fmt$, funState } from 'fundom';
 
-const [getCount, setCount] = funState({ count: 1 });
+const [getCount, setCount] = funState(1);
 
 const buttonConfig = { id: 1, name: 'submit' };
 
@@ -236,7 +237,7 @@ const span = elem$(
    txt$(
       fmt$(
          'next value of counter: {}',
-         comp$(getCount, (v) => v.value + 1)
+         comp$(getCount, (count) => count + 1)
       )
    )
 );
