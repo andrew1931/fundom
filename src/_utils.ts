@@ -67,6 +67,7 @@ export const _handleUtilityIncomingValue = (
       value(handler);
    } else {
       if (_isStateGetter(value)) {
+         // TODO: think of the way of cleaning up created snapshots in releaseEffect of FunStateGetter
          const val = value((v) => handler(v, false));
          handler(val, true);
       } else {
