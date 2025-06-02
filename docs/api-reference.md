@@ -10,6 +10,7 @@
 import { elem$ } from 'fundom';
 
 const title = elem$('h1');
+
 document.body.appendChild(title());
 ```
 
@@ -24,7 +25,6 @@ document.body.appendChild(title());
 import { elem$, txt$ } from 'fundom';
 
 const title = elem$('h1', txt$('Api reference'));
-document.body.appendChild(title());
 ```
 
 ### html$
@@ -38,7 +38,6 @@ document.body.appendChild(title());
 import { elem$, html$ } from 'fundom';
 
 const title = elem$('h1', html$('<span>Api reference</span>'));
-document.body.appendChild(title());
 ```
 
 ### nodes$
@@ -57,7 +56,6 @@ const section = elem$(
       elem$('p')(txt$('second child')) // or HTMLElement
    )
 );
-document.body.appendChild(section());
 ```
 
 ### list$
@@ -77,7 +75,6 @@ const section = elem$(
       return elem$('p', txt$(item.value))
    })
 );
-document.body.appendChild(section());
 ```
 
 ### style$
@@ -98,7 +95,6 @@ const section = elem$(
       'padding-top': '10px' // can be paddingTop as well
    })
 );
-document.body.appendChild(section());
 ```
 
 ### class$
@@ -114,7 +110,6 @@ const section = elem$(
    'section',
    class$('padding-md', 'flex', 'justify-top')
 );
-document.body.appendChild(section());
 ```
 
 ### attr$
@@ -130,7 +125,6 @@ const input = elem$(
    'input',
    attr$({ type: 'search', name: 'search-user' })
 );
-document.body.appendChild(input());
 ```
 
 ### ifElse$
@@ -153,7 +147,6 @@ const div = elem$(
       elem$('span', txt$('loaded')),
    )
 );
-document.body.appendChild(div());
 ```
 
 ### if$
@@ -173,7 +166,6 @@ const div = elem$(
       class$('loading-users')
    )
 );
-document.body.appendChild(div());
 ```
 
 ### on$
@@ -196,5 +188,56 @@ const button = elem$(
    'button',
    on$('click', (e) => console.log(e), unsubscribeClick)
 );
-document.body.appendChild(button());
+```
+
+## Compute utils
+
+### comp$
+
+**Type:** `<T, U>(stateGetter: FunStateGetter<T>, computer: (val: T) => U) => (handler: (val: unknown, firstHandle: boolean) => void) => void;`
+
+- utility to compute value of reactive state (or any data if you wish) with callback;
+- accepts state getter and computer callback which is invoked every time state changes;
+
+```typescript
+import { elem$, if$, attr$, comp$, funState } from 'fundom';
+
+const [getCount, setCount] = funState({ count: 1 });
+
+const button = elem$(
+   'button',
+   on$('click', () => setCount(getCount() + 1))
+   if$(comp$(getCount, (val) => val.count > 5))(
+      attr$({ disabled: 'disabled' })
+   )
+);
+```
+
+### fmt$
+
+**Type:** `(...values: Array<string | number | FunStateGetter<string | number> | ComputeReturnValue | FormatReturnValue>) => (handler: (val: string | number, firstHandle: boolean) => void) => void;`
+
+- utility to format strings with reactive state
+
+```typescript
+import { elem$, txt$, comp$, fmt$, funState } from 'fundom';
+
+const [getCount, setCount] = funState({ count: 1 });
+
+const buttonConfig = { id: 1, name: 'submit' };
+
+const button = elem$(
+   'button',
+   txt$(fmt$('value of counter: {} on button {}', getCount, buttonConfig.name))
+);
+
+const span = elem$(
+   'span',
+   txt$(
+      fmt$(
+         'next value of counter: {}',
+         comp$(getCount, (v) => v.value + 1)
+      )
+   )
+);
 ```

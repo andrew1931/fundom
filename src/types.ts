@@ -18,7 +18,8 @@ export type IncomingFormatItem =
    | string
    | number
    | FunStateGetter<string | number>
-   | ComputeReturnValue;
+   | ComputeReturnValue
+   | FormatReturnValue;
 
 export type UtilIncomingValue =
    | string
