@@ -1,4 +1,10 @@
-import type { FormatReturnValue, ComputeReturnValue, FunDomUtil, FunStateGetter } from './types';
+import type {
+   FormatReturnValue,
+   ComputeReturnValue,
+   FunDomUtil,
+   FunStateGetter,
+   ElementSnapshot,
+} from './types';
 
 export const FN_TYPE = Symbol('fnType');
 export const FN_TYPE_FORMAT = Symbol('format');
@@ -8,7 +14,7 @@ export const FN_TYPE_STATE_GETTER = Symbol('stateGetter');
 export const _applyMutations = (
    el: HTMLElement,
    fns: FunDomUtil[],
-   snapshot: HTMLElement | null,
+   snapshot: ElementSnapshot | null,
    comment: Comment | null,
    context: string[],
 ) => {
@@ -25,8 +31,15 @@ export const _camelToKebab = (prop: string): string => {
    return prop.replace(/([a-z])([A-Z])/g, '$1-$2').toLowerCase();
 };
 
-export const _makeSnapshot = (el: HTMLElement): HTMLElement => {
-   return el.cloneNode(true) as HTMLElement;
+export const _makeSnapshot = (el: HTMLElement): ElementSnapshot => {
+   return {
+      childrenLength: el.children.length,
+      innerHTML: el.innerHTML,
+      innerText: el.innerText,
+      style: el.style,
+      attributes: el.attributes,
+      classList: el.classList,
+   };
 };
 
 export const _randomId = (prefix = ''): string => {

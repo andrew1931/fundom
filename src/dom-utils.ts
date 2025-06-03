@@ -289,8 +289,8 @@ export const attr$ = (props: Record<string, UtilIncomingValue>): FunDomUtil => {
       for (let [key, propValue] of Object.entries(props)) {
          const handler = (value: string | number) => {
             if (snapshot) {
-               if (snapshot.hasAttribute(key)) {
-                  el.setAttribute(key, snapshot.getAttribute(key) || '');
+               if (snapshot.attributes.getNamedItem(key)) {
+                  el.setAttribute(key, snapshot.attributes.getNamedItem(key)?.value || '');
                } else {
                   el.removeAttribute(key);
                }

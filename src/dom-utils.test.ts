@@ -1,4 +1,5 @@
 import { describe, expect, test, vi } from 'vitest';
+import { _makeSnapshot } from './_utils';
 import { elem$, nodes$, list$, ifElse$, html$, txt$, on$ } from './dom-utils';
 import { funState } from './state';
 
@@ -70,7 +71,7 @@ describe('testing dom utils', () => {
       const parent = document.createElement('div');
       const comment = document.createComment('');
       parent.append(document.createElement('div'), comment, document.createElement('br'));
-      const snapshot = parent.cloneNode() as HTMLElement;
+      const snapshot = _makeSnapshot(parent);
       const spanCreator = vi.fn(elem$('span'));
       const pCreator = vi.fn(elem$('p'));
       const nodes = nodes$(spanCreator, pCreator);
@@ -243,7 +244,7 @@ describe('testing dom utils', () => {
       const parent = document.createElement('div');
       const snapshotHTMLString = '<h1>Test html</h1>';
       const htmlString = '<div><h1>Test html</h1></div>';
-      const snapshot = parent.cloneNode() as HTMLElement;
+      const snapshot = _makeSnapshot(parent);
       snapshot.innerHTML = snapshotHTMLString;
 
       const html = html$(htmlString);
@@ -278,7 +279,7 @@ describe('testing dom utils', () => {
       const parent = document.createElement('div');
       const snapshotString = 'initial string';
       const string = 'test string';
-      const snapshot = parent.cloneNode() as HTMLElement;
+      const snapshot = _makeSnapshot(parent);
       snapshot.innerText = snapshotString;
 
       const txt = txt$(string);

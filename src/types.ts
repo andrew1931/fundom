@@ -31,9 +31,18 @@ export type Condition<T> = boolean | FunStateGetter<T> | ComputeReturnValue;
 
 export type FunDomElementHistoryEvent = Record<string, string | number | boolean>;
 
+export type ElementSnapshot = {
+   childrenLength: number;
+   innerHTML: string;
+   innerText: string;
+   style: CSSStyleDeclaration;
+   attributes: NamedNodeMap;
+   classList: DOMTokenList;
+};
+
 export type FunDomUtil = (
    el: HTMLElement,
-   snapshot: HTMLElement | null,
+   snapshot: ElementSnapshot | null,
    comment: Comment | null,
    context: string[],
 ) => HTMLElement;

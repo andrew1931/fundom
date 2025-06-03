@@ -40,7 +40,7 @@ describe('testing internal utils', () => {
       fn2.mockClear();
       fn3.mockClear();
 
-      const snapshot2 = element.cloneNode() as HTMLElement;
+      const snapshot2 = _makeSnapshot(element);
       const comment2 = document.createComment('');
       const context2 = ['string'];
       _applyMutations(element, [fn1, fn2, fn3], snapshot2, comment2, context2);
@@ -66,14 +66,6 @@ describe('testing internal utils', () => {
       expect(_camelToKebab({})).toBe('');
       // @ts-ignore
       expect(_camelToKebab(0)).toBe('');
-   });
-
-   test('_makeSnapshot should call clone node with deep enabled flag on passed element', () => {
-      const element = document.createElement('div');
-      const cloneNodeSpy = vi.spyOn(element, 'cloneNode');
-      _makeSnapshot(element);
-      expect(cloneNodeSpy).toHaveBeenCalledTimes(1);
-      expect(cloneNodeSpy).toHaveBeenCalledWith(true);
    });
 
    test('_randomId should return random string with provided prefix', () => {
@@ -137,7 +129,7 @@ describe('testing internal utils', () => {
 
    test(`_handleUtilityIncomingValue should:
          - call fmt$ util if one is passed with passed handler as argument;
-         - call compute$ util if one is passed with passed handler as argument;
+         - call comp$ util if one is passed with passed handler as argument;
          - call passed handler and subscribe to funState with same handler if FunStateGetter is passed;
          - call passed handler if value is neither FunStateGetter nor comp$ nor fmt$`, () => {
       // TODO: impl
