@@ -6,15 +6,18 @@ export type FunStateGetter<T> = (
 ) => T;
 export type FunState = <T>(
    initialValue: T,
-) => [getter: FunStateGetter<T>, setter: FunStateSub<T>, releaser: (sub?: FunStateSub<T>) => void];
+) => [
+   getter: FunStateGetter<T>,
+   setter: FunStateSub<T>,
+   pauserResumer: (sub?: FunStateSub<T>) => void,
+   releaser: (sub?: FunStateSub<T>) => void,
+];
 
 export type FormatReturnValue = (
-   handler: (val: string | number, firstHandle: boolean) => void
+   handler: (val: string | number, firstHandle: boolean) => void,
 ) => void;
 
-export type ComputeReturnValue = (
-   handler: (val: unknown, firstHandle: boolean) => void
-) => void;
+export type ComputeReturnValue = (handler: (val: unknown, firstHandle: boolean) => void) => void;
 
 export type IncomingFormatItem =
    | string
@@ -53,5 +56,5 @@ export type FunDomUtil = (
    el: HTMLElement,
    context: ElementContext,
    ctrlFlowId: ControlFlowId,
-   useRevert: boolean
+   useRevert: boolean,
 ) => HTMLElement;

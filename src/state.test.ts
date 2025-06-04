@@ -2,10 +2,10 @@ import { describe, expect, test, vi } from 'vitest';
 import { funState } from './state';
 
 describe('testing funState', () => {
-   test('funState should return array of 3 functions: getter, setter, releaser', () => {
+   test('funState should return array of 4 functions: getter, setter, pauserResumer, releaser', () => {
       const state = funState('');
       expect(Array.isArray(state)).toBe(true);
-      expect(state.length).toBe(3);
+      expect(state.length).toBe(4);
       state.forEach((item) => expect(typeof item === 'function').toBe(true));
    });
 
@@ -43,8 +43,47 @@ describe('testing funState', () => {
       expect(getState()).toBe(3);
    });
 
+   test('funState pauserResumer should toggle subscribe state', () => {
+      const [getState, setState, pauserResumer] = funState({});
+      const subStub1 = vi.fn();
+      const subStub2 = vi.fn();
+      getState(subStub1);
+      getState(subStub2);
+      setState({});
+      expect(subStub1).toHaveBeenCalledTimes(1);
+      expect(subStub2).toHaveBeenCalledTimes(1);
+      pauserResumer(subStub1);
+      setState({});
+      expect(subStub1).toHaveBeenCalledTimes(1);
+      expect(subStub2).toHaveBeenCalledTimes(2);
+      pauserResumer(subStub1);
+      setState({});
+      expect(subStub1).toHaveBeenCalledTimes(2);
+      expect(subStub2).toHaveBeenCalledTimes(3);
+      // pause all
+      pauserResumer();
+      setState({});
+      expect(subStub1).toHaveBeenCalledTimes(2);
+      expect(subStub2).toHaveBeenCalledTimes(3);
+      pauserResumer();
+      setState({});
+      expect(subStub1).toHaveBeenCalledTimes(3);
+      expect(subStub2).toHaveBeenCalledTimes(4);
+      // pause all individually
+      pauserResumer(subStub1);
+      pauserResumer(subStub2);
+      setState({});
+      expect(subStub1).toHaveBeenCalledTimes(3);
+      expect(subStub2).toHaveBeenCalledTimes(4);
+      // resume all
+      pauserResumer();
+      setState({});
+      expect(subStub1).toHaveBeenCalledTimes(4);
+      expect(subStub2).toHaveBeenCalledTimes(5);
+   });
+
    test('funState releaser should unsubscribe provided callback or unsubscribe all otherwise', () => {
-      const [getState, setState, releaseState] = funState({});
+      const [getState, setState, pauserResumer, releaseState] = funState({});
       const subStub1 = vi.fn();
       const subStub2 = vi.fn();
       const sub1ReleaseEffect = vi.fn();

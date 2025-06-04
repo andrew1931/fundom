@@ -145,7 +145,8 @@ export const ifElse$ =
    (...fns2: FunDomUtil[]): FunDomUtil => {
       const ctrlFlowId = _randomId('cond_');
       const comment = document.createComment('');
-      return (el, context, parentCtrlFlowId, useRevert) => { // TODO: check ifElse inside ifElse with revert
+      return (el, context, parentCtrlFlowId, useRevert) => {
+         // TODO: check ifElse inside ifElse with revert
          if (!_isHtmlElement(el)) {
             console.warn(new NotHTMLElementError('ifElse$').message);
             return el;

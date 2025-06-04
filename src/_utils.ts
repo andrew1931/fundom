@@ -36,13 +36,13 @@ export const _camelToKebab = (prop: string): string => {
 
 export const _createContextItem = (
    el: HTMLElement,
-   comment: Comment | undefined
+   comment: Comment | undefined,
 ): ControlFlowContext => {
    return {
       snapshot: _makeSnapshot(el),
-      comment
+      comment,
    };
-}
+};
 
 export const _makeSnapshot = (el: HTMLElement): ElementSnapshot => {
    return {
@@ -87,14 +87,14 @@ export const _isComputeUtil = (value: unknown): value is ComputeReturnValue => {
 
 export const _ctrlFlowReleaseEffect = (ctrlFlowContext: ControlFlowContext | undefined): void => {
    if (ctrlFlowContext) {
-      ctrlFlowContext.snapshot = null
+      ctrlFlowContext.snapshot = null;
    }
 };
 
 export const _handleUtilityIncomingValue = (
    value: unknown,
    handler: (val: any, firstHandle: boolean) => void,
-   ctrlFlowContext?: ControlFlowContext
+   ctrlFlowContext?: ControlFlowContext,
 ): void => {
    if (_isComputeUtil(value) || _isFormatUtil(value)) {
       value(handler);
@@ -102,7 +102,7 @@ export const _handleUtilityIncomingValue = (
       if (_isStateGetter(value)) {
          const val = value(
             (v) => handler(v, false),
-            () => _ctrlFlowReleaseEffect(ctrlFlowContext)
+            () => _ctrlFlowReleaseEffect(ctrlFlowContext),
          );
          handler(val, true);
       } else {

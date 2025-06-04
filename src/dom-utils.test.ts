@@ -52,8 +52,8 @@ describe('testing dom utils', () => {
       const pCreator = vi.fn(elem$('p'));
       const nodes = nodes$(spanCreator, pCreator);
       expect(parent.children.length).toBe(2);
-      
-      nodes(parent, { 'contextId': context }, 'contextId', false);
+
+      nodes(parent, { contextId: context }, 'contextId', false);
       expect(spanCreator).toHaveBeenCalledTimes(1);
       expect(pCreator).toHaveBeenCalledTimes(1);
       expect(parent.children.length).toBe(4);
@@ -62,7 +62,7 @@ describe('testing dom utils', () => {
       expect(parent.children[2] instanceof HTMLParagraphElement).toBe(true);
       expect(parent.children[3] instanceof HTMLBRElement).toBe(true);
 
-      nodes(parent, { 'contextId': context }, 'contextId', false);
+      nodes(parent, { contextId: context }, 'contextId', false);
       expect(spanCreator).toHaveBeenCalledTimes(1);
       expect(pCreator).toHaveBeenCalledTimes(1);
       expect(parent.children.length).toBe(4);
@@ -79,7 +79,7 @@ describe('testing dom utils', () => {
 
       expect(parent.children.length).toBe(2);
 
-      nodes(parent, { 'contextId': context }, 'contextId', false);
+      nodes(parent, { contextId: context }, 'contextId', false);
       expect(spanCreator).toHaveBeenCalledTimes(1);
       expect(pCreator).toHaveBeenCalledTimes(1);
       expect(parent.children.length).toBe(4);
@@ -88,7 +88,7 @@ describe('testing dom utils', () => {
       expect(parent.children[2] instanceof HTMLParagraphElement).toBe(true);
       expect(parent.children[3] instanceof HTMLBRElement).toBe(true);
 
-      nodes(parent, { 'contextId': context }, 'contextId', true);
+      nodes(parent, { contextId: context }, 'contextId', true);
       expect(spanCreator).toHaveBeenCalledTimes(1);
       expect(pCreator).toHaveBeenCalledTimes(1);
       expect(parent.children.length).toBe(2);
@@ -116,12 +116,12 @@ describe('testing dom utils', () => {
       const data = [{ val: 1 }, { val: 2 }];
       const list = list$(data, (v, i) => elem$('span', mutatorStab(v, i)));
 
-      list(parent, { 'contextId': context }, 'contextId', false);
+      list(parent, { contextId: context }, 'contextId', false);
       expect(parent.children.length).toBe(2);
       expect(mutatorStab).toHaveBeenCalledTimes(2);
       expect(mutatorStab).toHaveBeenNthCalledWith(1, data[0], 0);
       expect(mutatorStab).toHaveBeenNthCalledWith(2, data[1], 1);
-      list(parent, { 'contextId': context }, 'contextId', false);
+      list(parent, { contextId: context }, 'contextId', false);
       expect(parent.children.length).toBe(2);
    });
 
@@ -135,7 +135,7 @@ describe('testing dom utils', () => {
       const list = list$(getData, (v, i) => elem$('span', mutatorStab(v, i)));
 
       expect(parent.children.length).toBe(2);
-      list(parent, { 'contextId': context }, 'contextId', false);
+      list(parent, { contextId: context }, 'contextId', false);
       expect(parent.children.length).toBe(4);
       expect(parent.children[0] instanceof HTMLDivElement).toBe(true);
       expect(parent.children[1] instanceof HTMLSpanElement).toBe(true);
@@ -250,7 +250,7 @@ describe('testing dom utils', () => {
       const parent = document.createElement('div');
       parent.innerHTML = snapshotHTMLString;
       const context = _createContextItem(parent, undefined);
-      
+
       const html = html$(htmlString);
       html(parent, {}, '', false);
       expect(parent.innerHTML).toBe(htmlString);
