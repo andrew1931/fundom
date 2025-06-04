@@ -2,6 +2,7 @@ import {
    _appendComment,
    _applyMutations,
    _camelToKebab,
+   _createContextItem,
    _handleUtilityIncomingValue,
    _hasChild,
    _isFunction,
@@ -9,6 +10,7 @@ import {
    _makeSnapshot,
    _randomId,
    _removeChildren,
+   NoSnapshotError,
    NotHTMLElementError,
 } from './_utils';
 import type { UtilIncomingValue, FunDomUtil, FunStateGetter, Condition } from './types';
@@ -19,21 +21,21 @@ export const elem$ = (
 ): ((...fns: FunDomUtil[]) => HTMLElement) => {
    return (...extraUtils: FunDomUtil[]) => {
       const el = document.createElement(name);
-      _applyMutations(el, [...utils, ...extraUtils], null, null, []);
+      _applyMutations(el, [...utils, ...extraUtils], {}, '', false);
       return el;
    };
 };
 
 export const nodes$ = (...values: (() => HTMLElement)[] | HTMLElement[]): FunDomUtil => {
    const children: HTMLElement[] = [];
-   return (el, snapshot, comment) => {
+   return (el, context, ctrlFlowId, useRevert) => {
       if (!_isHtmlElement(el)) {
          console.warn(new NotHTMLElementError('nodes$').message);
          return el;
       }
-
-      // TODO: think of how not to invoke create element fn if snapshot is passed and children array is empty but el.children length > 0
-      if (snapshot && el.children.length === 0) {
+      // TODO: compare performance with createDocumentFragment
+      // TODO: think of how not to invoke create element fn if useRevert is true and children array is empty but el.children length > 0
+      if (useRevert && el.children.length === 0) {
          return el; // nothing to revert
       }
 
@@ -56,12 +58,13 @@ export const nodes$ = (...values: (() => HTMLElement)[] | HTMLElement[]): FunDom
          }
       }
 
-      if (snapshot) {
+      if (useRevert) {
          _removeChildren(el, ...children);
       } else {
+         const comment = context[ctrlFlowId]?.comment;
          for (let child of children) {
             if (!_hasChild(el, child)) {
-               if (comment !== undefined) {
+               if (comment && comment instanceof Comment) {
                   el.insertBefore(child, comment);
                } else {
                   el.appendChild(child);
@@ -80,13 +83,13 @@ export const list$ = <T>(
    const comment = document.createComment('');
    let prevChildren: HTMLElement[] = [];
    let prevItems: Array<T> = [];
-   return (el, snapshot, parentComment, context) => {
+   return (el, context, ctrlFlowId, useRevert) => {
       if (!_isHtmlElement(el)) {
          console.warn(new NotHTMLElementError('list$').message);
          return el;
       }
 
-      _appendComment(el, comment, parentComment);
+      _appendComment(el, comment, context[ctrlFlowId]?.comment);
 
       const handler = (items: Array<T>) => {
          if (!Array.isArray(items)) {
@@ -109,7 +112,7 @@ export const list$ = <T>(
                   if (i < prevItems.length) {
                      el.replaceChild(child, prevChildren[i] as HTMLElement);
                   } else {
-                     _applyMutations(el, [nodes$(child)], snapshot, comment, context);
+                     _applyMutations(el, [nodes$(child)], context, ctrlFlowId, useRevert);
                   }
                }
             }
@@ -123,7 +126,7 @@ export const list$ = <T>(
             for (let [i, item] of items.entries()) {
                children.push(newElementFn(item, i)());
             }
-            _applyMutations(el, [nodes$(...children)], snapshot, comment, context);
+            _applyMutations(el, [nodes$(...children)], context, ctrlFlowId, useRevert);
          }
 
          prevChildren = children;
@@ -140,39 +143,44 @@ export const ifElse$ =
    <T>(condition: Condition<T>) =>
    (...fns1: FunDomUtil[]) =>
    (...fns2: FunDomUtil[]): FunDomUtil => {
-      const id = _randomId('cond_');
+      const ctrlFlowId = _randomId('cond_');
       const comment = document.createComment('');
-      return (el, _parentSnapshot, parentComment, context) => {
+      return (el, context, parentCtrlFlowId, useRevert) => { // TODO: check ifElse inside ifElse with revert
          if (!_isHtmlElement(el)) {
             console.warn(new NotHTMLElementError('ifElse$').message);
             return el;
          }
 
-         const snapshot = _makeSnapshot(el);
          function handler(val: unknown, firstHandle = false): void {
-            if (Boolean(val) === true) {
-               if (!firstHandle) {
-                  // revert fns2
-                  _applyMutations(el, fns2, snapshot, comment, context);
-               }
-               _applyMutations(el, fns1, null, comment, context);
+            if (useRevert) {
+               // revert fns1 and fns2
+               _applyMutations(el, fns1, context, ctrlFlowId, useRevert);
+               _applyMutations(el, fns2, context, ctrlFlowId, useRevert);
             } else {
-               if (!firstHandle) {
-                  // revert fns1
-                  _applyMutations(el, fns1, snapshot, comment, context);
+               if (Boolean(val) === true) {
+                  if (!firstHandle) {
+                     // revert fns2
+                     _applyMutations(el, fns2, context, ctrlFlowId, !useRevert);
+                  }
+                  _applyMutations(el, fns1, context, ctrlFlowId, useRevert);
+               } else {
+                  if (!firstHandle) {
+                     // revert fns1
+                     _applyMutations(el, fns1, context, ctrlFlowId, !useRevert);
+                  }
+                  _applyMutations(el, fns2, context, ctrlFlowId, useRevert);
                }
-               _applyMutations(el, fns2, null, comment, context);
             }
          }
 
-         if (context.indexOf(id) === -1) {
-            context.push(id);
+         if (!(ctrlFlowId in context)) {
+            context[ctrlFlowId] = _createContextItem(el, comment);
             /* 
                NOTE: comment is used for appending element before it
                so it is located in the same order in DOM as it is inside elem$ function
             */
-            _appendComment(el, comment, parentComment);
-            _handleUtilityIncomingValue(condition, handler);
+            _appendComment(el, comment, context[parentCtrlFlowId]?.comment);
+            _handleUtilityIncomingValue(condition, handler, context[ctrlFlowId]);
          }
          return el;
       };
@@ -185,15 +193,20 @@ export const if$ =
    };
 
 export const html$ = (value: UtilIncomingValue): FunDomUtil => {
-   return (el, snapshot) => {
+   return (el, context, ctrlFlowId, useRevert) => {
       if (!_isHtmlElement(el)) {
          console.warn(new NotHTMLElementError('html$').message);
          return el;
       }
 
       const handler = (val: string | number) => {
-         if (snapshot) {
-            el.innerHTML = snapshot.innerHTML;
+         if (useRevert) {
+            const snapshot = context[ctrlFlowId]?.snapshot;
+            if (snapshot) {
+               el.innerHTML = snapshot.innerHTML;
+            } else {
+               console.warn(new NoSnapshotError(ctrlFlowId).message);
+            }
          } else {
             el.innerHTML = String(val);
          }
@@ -204,15 +217,20 @@ export const html$ = (value: UtilIncomingValue): FunDomUtil => {
 };
 
 export const txt$ = (value: UtilIncomingValue): FunDomUtil => {
-   return (el, snapshot) => {
+   return (el, context, ctrlFlowId, useRevert) => {
       if (!_isHtmlElement(el)) {
          console.warn(new NotHTMLElementError('txt$').message);
          return el;
       }
 
       const handler = (val: string | number) => {
-         if (snapshot) {
-            el.innerText = snapshot.innerText;
+         if (useRevert) {
+            const snapshot = context[ctrlFlowId]?.snapshot;
+            if (snapshot) {
+               el.innerText = snapshot.innerText;
+            } else {
+               console.warn(new NoSnapshotError(ctrlFlowId).message);
+            }
          } else {
             el.innerText = String(val);
          }
@@ -223,7 +241,7 @@ export const txt$ = (value: UtilIncomingValue): FunDomUtil => {
 };
 
 export const style$ = (props: Record<string, UtilIncomingValue>): FunDomUtil => {
-   return (el, snapshot) => {
+   return (el, context, ctrlFlowId, useRevert) => {
       if (!_isHtmlElement(el)) {
          console.warn(new NotHTMLElementError('style$').message);
          return el;
@@ -232,11 +250,16 @@ export const style$ = (props: Record<string, UtilIncomingValue>): FunDomUtil => 
       for (let [_key, propValue] of Object.entries(props)) {
          const key = _camelToKebab(_key);
          const handler = (value: string | number) => {
-            if (snapshot) {
-               if (snapshot.style.getPropertyValue(key) !== '') {
-                  el.style.setProperty(key, snapshot.style.getPropertyValue(key));
+            if (useRevert) {
+               const snapshot = context[ctrlFlowId]?.snapshot;
+               if (snapshot) {
+                  if (snapshot.style.getPropertyValue(key) !== '') {
+                     el.style.setProperty(key, snapshot.style.getPropertyValue(key));
+                  } else {
+                     el.style.removeProperty(key);
+                  }
                } else {
-                  el.style.removeProperty(key);
+                  console.warn(new NoSnapshotError(ctrlFlowId).message);
                }
             } else {
                el.style.setProperty(key, String(value));
@@ -249,7 +272,7 @@ export const style$ = (props: Record<string, UtilIncomingValue>): FunDomUtil => 
 };
 
 export const class$ = (...classNames: UtilIncomingValue[]): FunDomUtil => {
-   return (el, snapshot) => {
+   return (el, context, ctrlFlowId, useRevert) => {
       if (!_isHtmlElement(el)) {
          console.warn(new NotHTMLElementError('class$').message);
          return el;
@@ -259,11 +282,16 @@ export const class$ = (...classNames: UtilIncomingValue[]): FunDomUtil => {
          let prevAddedValue: string | undefined;
          const handler = (value: string | number) => {
             const classString = String(value);
-            if (snapshot) {
-               if (!snapshot.classList.contains(classString)) {
-                  el.classList.remove(classString);
+            if (useRevert) {
+               const snapshot = context[ctrlFlowId]?.snapshot;
+               if (snapshot) {
+                  if (!snapshot.classList.contains(classString)) {
+                     el.classList.remove(classString);
+                  } else {
+                     console.warn(`[revert classList] className ${classString} existed before add`);
+                  }
                } else {
-                  console.warn(`[revert classList] className ${classString} existed before add`);
+                  console.warn(new NoSnapshotError(ctrlFlowId).message);
                }
             } else {
                if (prevAddedValue) {
@@ -280,7 +308,7 @@ export const class$ = (...classNames: UtilIncomingValue[]): FunDomUtil => {
 };
 
 export const attr$ = (props: Record<string, UtilIncomingValue>): FunDomUtil => {
-   return (el, snapshot) => {
+   return (el, context, ctrlFlowId, useRevert) => {
       if (!_isHtmlElement(el)) {
          console.warn(new NotHTMLElementError('attr$').message);
          return el;
@@ -288,11 +316,16 @@ export const attr$ = (props: Record<string, UtilIncomingValue>): FunDomUtil => {
 
       for (let [key, propValue] of Object.entries(props)) {
          const handler = (value: string | number) => {
-            if (snapshot) {
-               if (snapshot.attributes.getNamedItem(key)) {
-                  el.setAttribute(key, snapshot.attributes.getNamedItem(key)?.value || '');
+            if (useRevert) {
+               const snapshot = context[ctrlFlowId]?.snapshot;
+               if (snapshot) {
+                  if (snapshot.attributes.getNamedItem(key)) {
+                     el.setAttribute(key, snapshot.attributes.getNamedItem(key)?.value || '');
+                  } else {
+                     el.removeAttribute(key);
+                  }
                } else {
-                  el.removeAttribute(key);
+                  console.warn(new NoSnapshotError(ctrlFlowId).message);
                }
             } else {
                el.setAttribute(key, String(value));
@@ -307,7 +340,7 @@ export const attr$ = (props: Record<string, UtilIncomingValue>): FunDomUtil => {
 export const on$ = (
    type: string,
    cb: (e: Event) => void,
-   offEvent?: FunStateGetter<boolean>,
+   offTrigger?: FunStateGetter<boolean>,
 ): FunDomUtil => {
    return (el) => {
       if (!_isHtmlElement(el)) {
@@ -317,8 +350,8 @@ export const on$ = (
 
       el.addEventListener(type, cb);
 
-      if (offEvent) {
-         offEvent(() => {
+      if (offTrigger) {
+         offTrigger(() => {
             el.removeEventListener(type, cb);
          });
       }

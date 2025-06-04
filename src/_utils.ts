@@ -4,6 +4,9 @@ import type {
    FunDomUtil,
    FunStateGetter,
    ElementSnapshot,
+   ElementContext,
+   ControlFlowContext,
+   ControlFlowId,
 } from './types';
 
 export const FN_TYPE = Symbol('fnType');
@@ -14,13 +17,13 @@ export const FN_TYPE_STATE_GETTER = Symbol('stateGetter');
 export const _applyMutations = (
    el: HTMLElement,
    fns: FunDomUtil[],
-   snapshot: ElementSnapshot | null,
-   comment: Comment | null,
-   context: string[],
+   context: ElementContext,
+   ctrlFlowId: ControlFlowId,
+   useRevert: boolean,
 ) => {
    if (fns.length === 0) return;
    for (let fn of fns) {
-      fn(el, snapshot, comment, context);
+      fn(el, context, ctrlFlowId, useRevert);
    }
 };
 
@@ -30,6 +33,16 @@ export const _camelToKebab = (prop: string): string => {
    }
    return prop.replace(/([a-z])([A-Z])/g, '$1-$2').toLowerCase();
 };
+
+export const _createContextItem = (
+   el: HTMLElement,
+   comment: Comment | undefined
+): ControlFlowContext => {
+   return {
+      snapshot: _makeSnapshot(el),
+      comment
+   };
+}
 
 export const _makeSnapshot = (el: HTMLElement): ElementSnapshot => {
    return {
@@ -49,7 +62,7 @@ export const _randomId = (prefix = ''): string => {
 export const _appendComment = (
    el: HTMLElement,
    comment: Comment,
-   parentComment: Comment | null,
+   parentComment: Comment | undefined,
 ): void => {
    if (!_hasChild(el, comment)) {
       if (parentComment) {
@@ -72,16 +85,25 @@ export const _isComputeUtil = (value: unknown): value is ComputeReturnValue => {
    return _isFunction(value) && (value as any)[FN_TYPE] === FN_TYPE_COMPUTE;
 };
 
+export const _ctrlFlowReleaseEffect = (ctrlFlowContext: ControlFlowContext | undefined): void => {
+   if (ctrlFlowContext) {
+      ctrlFlowContext.snapshot = null
+   }
+};
+
 export const _handleUtilityIncomingValue = (
    value: unknown,
    handler: (val: any, firstHandle: boolean) => void,
+   ctrlFlowContext?: ControlFlowContext
 ): void => {
    if (_isComputeUtil(value) || _isFormatUtil(value)) {
       value(handler);
    } else {
       if (_isStateGetter(value)) {
-         // TODO: think of the way of cleaning up created snapshots in releaseEffect of FunStateGetter
-         const val = value((v) => handler(v, false));
+         const val = value(
+            (v) => handler(v, false),
+            () => _ctrlFlowReleaseEffect(ctrlFlowContext)
+         );
          handler(val, true);
       } else {
          handler(value, true);
@@ -110,5 +132,12 @@ export class NotHTMLElementError extends Error {
    constructor(origin: string) {
       super();
       this.message = `value passed to ${origin} is not HTMLElement type`;
+   }
+}
+
+export class NoSnapshotError extends Error {
+   constructor(id: string) {
+      super();
+      this.message = `snapshot for id ${id} does not exist`;
    }
 }

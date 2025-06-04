@@ -9,10 +9,12 @@ export type FunState = <T>(
 ) => [getter: FunStateGetter<T>, setter: FunStateSub<T>, releaser: (sub?: FunStateSub<T>) => void];
 
 export type FormatReturnValue = (
-   handler: (val: string | number, firstHandle: boolean) => void,
+   handler: (val: string | number, firstHandle: boolean) => void
 ) => void;
 
-export type ComputeReturnValue = (handler: (val: unknown, firstHandle: boolean) => void) => void;
+export type ComputeReturnValue = (
+   handler: (val: unknown, firstHandle: boolean) => void
+) => void;
 
 export type IncomingFormatItem =
    | string
@@ -40,9 +42,16 @@ export type ElementSnapshot = {
    classList: DOMTokenList;
 };
 
+export type ControlFlowId = string;
+export type ControlFlowContext = {
+   snapshot: ElementSnapshot | null;
+   comment: Comment | undefined;
+};
+export type ElementContext = Record<ControlFlowId, ControlFlowContext>;
+
 export type FunDomUtil = (
    el: HTMLElement,
-   snapshot: ElementSnapshot | null,
-   comment: Comment | null,
-   context: string[],
+   context: ElementContext,
+   ctrlFlowId: ControlFlowId,
+   useRevert: boolean
 ) => HTMLElement;

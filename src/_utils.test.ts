@@ -2,7 +2,6 @@ import { describe, expect, test, vi } from 'vitest';
 import {
    _applyMutations,
    _camelToKebab,
-   _makeSnapshot,
    _randomId,
    _appendComment,
    _isStateGetter,
@@ -12,6 +11,7 @@ import {
    _hasChild,
    _removeChildren,
    _isFunction,
+   _createContextItem,
 } from './_utils';
 import { funState } from './state';
 import { fmt$, comp$ } from './utils';
@@ -22,34 +22,34 @@ describe('testing internal utils', () => {
       const fn2 = vi.fn();
       const fn3 = vi.fn();
       const element = document.createElement('div');
-      const snapshot = null;
-      const comment = null;
-      const context: string[] = [];
+      const comment = undefined;
+      const contextId = 'contextId';
+      const context = { [contextId]: _createContextItem(element, comment) };
       expect(fn1).toHaveBeenCalledTimes(0);
       expect(fn2).toHaveBeenCalledTimes(0);
       expect(fn3).toHaveBeenCalledTimes(0);
-      _applyMutations(element, [fn1, fn2, fn3], snapshot, comment, context);
+      _applyMutations(element, [fn1, fn2, fn3], context, contextId, true);
       expect(fn1).toHaveBeenCalledTimes(1);
-      expect(fn1).toHaveBeenCalledWith(element, snapshot, comment, context);
+      expect(fn1).toHaveBeenCalledWith(element, context, contextId, true);
       expect(fn2).toHaveBeenCalledTimes(1);
-      expect(fn2).toHaveBeenCalledWith(element, snapshot, comment, context);
+      expect(fn2).toHaveBeenCalledWith(element, context, contextId, true);
       expect(fn3).toHaveBeenCalledTimes(1);
-      expect(fn3).toHaveBeenCalledWith(element, snapshot, comment, context);
+      expect(fn3).toHaveBeenCalledWith(element, context, contextId, true);
 
       fn1.mockClear();
       fn2.mockClear();
       fn3.mockClear();
 
-      const snapshot2 = _makeSnapshot(element);
+      const contextId2 = 'contextId2';
       const comment2 = document.createComment('');
-      const context2 = ['string'];
-      _applyMutations(element, [fn1, fn2, fn3], snapshot2, comment2, context2);
+      const context2 = { [contextId2]: _createContextItem(element, comment2) };
+      _applyMutations(element, [fn1, fn2, fn3], context2, contextId2, false);
       expect(fn1).toHaveBeenCalledTimes(1);
-      expect(fn1).toHaveBeenCalledWith(element, snapshot2, comment2, context2);
+      expect(fn1).toHaveBeenCalledWith(element, context2, contextId2, false);
       expect(fn2).toHaveBeenCalledTimes(1);
-      expect(fn2).toHaveBeenCalledWith(element, snapshot2, comment2, context2);
+      expect(fn2).toHaveBeenCalledWith(element, context2, contextId2, false);
       expect(fn3).toHaveBeenCalledTimes(1);
-      expect(fn3).toHaveBeenCalledWith(element, snapshot2, comment2, context2);
+      expect(fn3).toHaveBeenCalledWith(element, context2, contextId2, false);
    });
 
    test('_camelToKebab should convert camel case string to kebab case string', () => {
@@ -94,8 +94,8 @@ describe('testing internal utils', () => {
       expect(element.contains(comment2)).toBe(false);
       _appendComment(element, comment, parentComment);
       _appendComment(element, comment, parentComment);
-      _appendComment(element, comment2, null);
-      _appendComment(element, comment2, null);
+      _appendComment(element, comment2, undefined);
+      _appendComment(element, comment2, undefined);
       expect(insertSpy).toBeCalledTimes(1); // 2-d call should be ignore
       expect(appendSpy).toBeCalledTimes(1); // 4-th call should be ignore
       expect(element.contains(comment)).toBe(true);
@@ -165,5 +165,15 @@ describe('testing internal utils', () => {
       expect(_isFunction({})).toBe(false);
       expect(_isFunction(1)).toBe(false);
       expect(_isFunction(undefined)).toBe(false);
+   });
+
+   test('_createContextItem should return correct context of element', () => {
+      const element = document.createElement('div');
+      const comment = document.createComment('');
+      const context = _createContextItem(element, comment);
+      expect(Object.keys(context).length).toBe(2);
+      expect(context.snapshot).toBeDefined();
+      expect(context.comment).toBeDefined();
+      expect(context.comment).toBe(comment);
    });
 });
