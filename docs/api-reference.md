@@ -1,12 +1,44 @@
+## funState
+
+- creates reactive state with initial value;
+- returns getter, setter, pauserResumer, releaser functions in array;
+
+```typescript
+import { funState } from 'fundom';
+
+const [getState, setState, pauserResumer, releaser] = funState(1);
+
+const subscriber = (val) => {};
+
+const value = getState(
+   subscriber, // <- optional subscriber to changes, invoked every time setState provides new value
+   () => {} // <- optional effect when releaser is invoked
+);
+
+pauserResumer(subscriber) // pause target subscriber
+
+setState(3) // // subscriber is not invoked since state is on pause
+
+pauserResumer() // pause all (in this flow works like resumer since there is only one subscriber and it is already paused)
+
+setState(4) // subscriber is invoked since state is resumed
+
+setState(4) // subscriber is not invoked since value is the same
+
+releaser(subscriber) // release target subscriber
+
+releaser() // release all (in this flow is ignored since there are no other subscribers)
+
+setState(5) // subscriber is not invoked since state is released
+
+```
+
 ## DOM utils
 
 ### elem$
 
-**Type:** `(name: string, ...utils: FunDomUtil[]) => ((...fns: FunDomUtil[]) => HTMLElement);`
-
 - creates HTML element;
-- works like a pipe;
-- accepts type of element as first argument and any number of dom utils from this reference to mutate its state, returns a function which accepts more dom utils (made for extending elements) and returns created element;
+
 ```typescript
 import { elem$ } from 'fundom';
 
@@ -17,10 +49,7 @@ document.body.appendChild(title());
 
 ### txt$
 
-**Type:** `(value: string | number | FunStateGetter<string | number> | FormatReturnValue) => FunDomUtil;`
-
 - sets innerText value on current element;
-- accepts string / number / FunStateGetter with string or number;
 
 ```typescript
 import { elem$, txt$ } from 'fundom';
@@ -30,10 +59,7 @@ const title = elem$('h1', txt$('Api reference'));
 
 ### html$
 
-**Type:** `(value: string | number | FunStateGetter<string | number> | FormatReturnValue) => FunDomUtil;`
-
 - sets innerHTML value on current element;
-- accepts string / number / FunStateGetter with string or number;
 
 ```typescript
 import { elem$, html$ } from 'fundom';
@@ -42,8 +68,6 @@ const title = elem$('h1', html$('<span>Api reference</span>'));
 ```
 
 ### nodes$
-
-**Type:** `(() => HTMLElement)[] | HTMLElement[]) => FunDomUtil;`
 
 - inserts passed HTML elements into current element;
 - accepts any number of elem$ functions or HTML elements to be inserted into current element;
@@ -61,10 +85,8 @@ const section = elem$(
 
 ### list$
 
-**Type:** `<T>(data: Array<T> | FunStateGetter<Array<T>>, newElementFn: (item: T, index: number) => ReturnType<typeof elem$>) => FunDomUtil;`
+- inserts list of HTML elements into current element by provided array;
 
-- inserts list of HTML elements into current element by passed array;
-- accepts array of items / FunStateGetter with array of items and function which should return elem$ utility which is called on every element of provided array
 ```typescript
 import { elem$, nodes$, list$ } from 'fundom';
 
@@ -79,8 +101,6 @@ const section = elem$(
 ```
 
 ### style$
-
-**Type:** `(props: Record<string, string | number | FunStateGetter<string | number> | FormatReturnValue;>) => FunDomUtil;`
 
 - applies inline styles to current element;
 - style keys can be passed either in camel or kebab case;
@@ -100,8 +120,6 @@ const section = elem$(
 
 ### class$
 
-**Type:** `(...(string | number | FunStateGetter<string | number> | FormatReturnValue)) => FunDomUtil;`
-
 - adds classes to current element;
 
 ```typescript
@@ -115,8 +133,6 @@ const section = elem$(
 
 ### attr$
 
-**Type:** `(props: Record<string, string | number | FunStateGetter<string | number> | FormatReturnValue;>) => FunDomUtil;`
-
 - adds attributes to current element;
 
 ```typescript
@@ -129,8 +145,6 @@ const input = elem$(
 ```
 
 ### ifElse$
-
-**Type:** `<T>(condition: Condition<T>) => (...fns1: FunDomUtil[]) => (...fns2: FunDomUtil[]) => FunDomUtil;`
 
 - applies utilities from second function and reverts utilities from third function if condition is truthy or the other way around;
 
@@ -152,8 +166,6 @@ const div = elem$(
 
 ### if$
 
-**Type:** `<T>(condition: Condition<T>) => (...fns1: FunDomUtil[]) => FunDomUtil;`
-
 - applies utilities from second function if condition is truthy or reverts them otherwise;
 
 ```typescript
@@ -170,8 +182,6 @@ const div = elem$(
 ```
 
 ### on$
-
-**Type:** `(type: string, cb: (e: Event) => void, offEvent?: FunStateGetter<boolean>) => FunDomUtil;`
 
 - adds event listener with provided type and callback (types are the same as for addEventListener method of document);
 - accepts optional FunStateGetter<boolean> to removeEventListener;
@@ -195,8 +205,6 @@ const button = elem$(
 
 ### comp$
 
-**Type:** `<T, U>(stateGetter: FunStateGetter<T>, computer: (val: T) => U) => (handler: (val: unknown, firstHandle: boolean) => void) => void;`
-
 - utility to compute value of reactive state (or any data if you wish) with callback;
 - accepts state getter and computer callback which is invoked every time state changes;
 
@@ -215,8 +223,6 @@ const button = elem$(
 ```
 
 ### fmt$
-
-**Type:** `(...values: Array<string | number | FunStateGetter<string | number> | ComputeReturnValue | FormatReturnValue>) => (handler: (val: string | number, firstHandle: boolean) => void) => void;`
 
 - utility to format strings with reactive state
 

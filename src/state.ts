@@ -64,7 +64,7 @@ export const funState: FunState = <T>(initialValue: T) => {
    };
 
    const releaser = (sub?: FunStateSub<T>): void => {
-      if (sub !== undefined) {
+      if (sub) {
          const index = subs.findIndex(([_sub]) => _sub === sub);
          if (index > -1) {
             const removed = subs.splice(index, 1);
