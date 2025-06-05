@@ -16,6 +16,9 @@ export const funState: FunState = <T>(initialValue: T) => {
       return subs.findIndex(([_sub]) => _sub === sub);
    };
 
+   /*
+    * @description pauses provided subscriber or all subscribers if no arguments provided
+    **/
    const pause = (sub?: FunStateSub<T>) => {
       if (sub) {
          if (subIndex(sub) === -1) {
@@ -36,6 +39,9 @@ export const funState: FunState = <T>(initialValue: T) => {
       }
    };
 
+   /*
+    * @description resumes provided subscriber or all subscribers if no arguments provided
+    **/
    const resume = (sub?: FunStateSub<T>) => {
       if (sub) {
          if (subIndex(sub) === -1) {
@@ -53,6 +59,9 @@ export const funState: FunState = <T>(initialValue: T) => {
       }
    };
 
+   /*
+    * @description unsubscribes provided subscriber or all subscribers if no arguments provided and invokes release effects
+    **/
    const release = (sub?: FunStateSub<T>): void => {
       if (sub) {
          const index = subIndex(sub);
@@ -85,6 +94,9 @@ export const funState: FunState = <T>(initialValue: T) => {
       }
    };
 
+   /*
+    * @description returns current value, can be used to add subscriber with release effect
+    **/
    const getter = (sub?: FunStateSub<T>, releaseEffect?: FunStateOnReleaseEffect): T => {
       if (sub !== undefined) {
          if (_isFunction(sub)) {
@@ -105,6 +117,9 @@ export const funState: FunState = <T>(initialValue: T) => {
    };
    getter[FN_TYPE] = FN_TYPE_STATE_GETTER;
 
+   /*
+    * @description updates current value, can be used to control subscribers' reactivity if callback is provided instead of new value
+    **/
    const setter = (arg: T | FunStateSetterCallback<T>): void => {
       if (_isFunction(arg)) {
          (arg as FunStateSetterCallback<T>)(controller);
