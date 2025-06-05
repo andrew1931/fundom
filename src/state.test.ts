@@ -2,10 +2,10 @@ import { describe, expect, test, vi } from 'vitest';
 import { funState } from './state';
 
 describe('testing funState', () => {
-   test('funState should return array of 4 functions: getter, setter, pauserResumer, releaser', () => {
+   test('funState should return array of 2 functions: getter, setter', () => {
       const state = funState('');
       expect(Array.isArray(state)).toBe(true);
-      expect(state.length).toBe(4);
+      expect(state.length).toBe(2);
       state.forEach((item) => expect(typeof item === 'function').toBe(true));
    });
 
@@ -29,7 +29,7 @@ describe('testing funState', () => {
       expect(releaseStub).toHaveBeenCalledTimes(0);
    });
 
-   test('funState setter should change state and notify subscribers if new value is different', () => {
+   test('funState setter should change state and notify subscribers if new value is provided', () => {
       const [getState, setState] = funState(1);
       const subStub = vi.fn();
       getState(subStub);
@@ -43,8 +43,8 @@ describe('testing funState', () => {
       expect(getState()).toBe(3);
    });
 
-   test('funState pauserResumer should toggle subscribe state', () => {
-      const [getState, setState, pauserResumer] = funState({});
+   test('funState setter should return controller if callback provided which should be able to pause, resume, release state', () => {
+      const [getState, setState] = funState({});
       const subStub1 = vi.fn();
       const subStub2 = vi.fn();
       getState(subStub1);
@@ -52,56 +52,50 @@ describe('testing funState', () => {
       setState({});
       expect(subStub1).toHaveBeenCalledTimes(1);
       expect(subStub2).toHaveBeenCalledTimes(1);
-      pauserResumer(subStub1);
+      setState((f) => f('pause', subStub1));
       setState({});
       expect(subStub1).toHaveBeenCalledTimes(1);
       expect(subStub2).toHaveBeenCalledTimes(2);
-      pauserResumer(subStub1);
+      setState((f) => f('resume', subStub1));
       setState({});
       expect(subStub1).toHaveBeenCalledTimes(2);
       expect(subStub2).toHaveBeenCalledTimes(3);
-      // pause all
-      pauserResumer();
+      setState((f) => f('pause'));
       setState({});
       expect(subStub1).toHaveBeenCalledTimes(2);
       expect(subStub2).toHaveBeenCalledTimes(3);
-      pauserResumer();
+      setState((f) => f('resume'));
       setState({});
       expect(subStub1).toHaveBeenCalledTimes(3);
       expect(subStub2).toHaveBeenCalledTimes(4);
-      // pause all individually
-      pauserResumer(subStub1);
-      pauserResumer(subStub2);
+      setState((f) => f('pause', subStub1));
+      setState((f) => f('pause', subStub2));
       setState({});
       expect(subStub1).toHaveBeenCalledTimes(3);
       expect(subStub2).toHaveBeenCalledTimes(4);
-      // resume all
-      pauserResumer();
+      setState((f) => f('resume'));
       setState({});
       expect(subStub1).toHaveBeenCalledTimes(4);
       expect(subStub2).toHaveBeenCalledTimes(5);
-   });
 
-   test('funState releaser should unsubscribe provided callback or unsubscribe all otherwise', () => {
-      const [getState, setState, pauserResumer, releaseState] = funState({});
-      const subStub1 = vi.fn();
-      const subStub2 = vi.fn();
-      const sub1ReleaseEffect = vi.fn();
-      getState(subStub1, sub1ReleaseEffect);
-      getState(subStub2);
+      const subStub3 = vi.fn();
+      const subStub4 = vi.fn();
+      const sub3ReleaseEffect = vi.fn();
+      getState(subStub3, sub3ReleaseEffect);
+      getState(subStub4);
       setState({});
-      expect(sub1ReleaseEffect).toHaveBeenCalledTimes(0);
-      expect(subStub1).toHaveBeenCalledTimes(1);
-      expect(subStub2).toHaveBeenCalledTimes(1);
-      releaseState(subStub1);
+      expect(sub3ReleaseEffect).toHaveBeenCalledTimes(0);
+      expect(subStub3).toHaveBeenCalledTimes(1);
+      expect(subStub4).toHaveBeenCalledTimes(1);
+      setState((f) => f('release', subStub3));
       setState({});
-      expect(sub1ReleaseEffect).toHaveBeenCalledTimes(1);
-      expect(subStub1).toHaveBeenCalledTimes(1);
-      expect(subStub2).toHaveBeenCalledTimes(2);
-      releaseState();
+      expect(sub3ReleaseEffect).toHaveBeenCalledTimes(1);
+      expect(subStub3).toHaveBeenCalledTimes(1);
+      expect(subStub4).toHaveBeenCalledTimes(2);
+      setState((f) => f('release'));
       setState({});
-      expect(sub1ReleaseEffect).toHaveBeenCalledTimes(1);
-      expect(subStub1).toHaveBeenCalledTimes(1);
-      expect(subStub2).toHaveBeenCalledTimes(2);
+      expect(sub3ReleaseEffect).toHaveBeenCalledTimes(1);
+      expect(subStub3).toHaveBeenCalledTimes(1);
+      expect(subStub4).toHaveBeenCalledTimes(2);
    });
 });

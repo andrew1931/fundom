@@ -1,33 +1,38 @@
 ## funState
 
 - creates reactive state with initial value;
-- returns getter, setter, pauserResumer, releaser functions in array;
+- returns getter, setter functions in array;
+- getter returns value and can be subscribed to if callback passed; second optional callback can be passed if release effect is needed;
+- setter accepts new value or a callback, which receives state controller to pause, resume, release state subscribers;
 
 ```typescript
 import { funState } from 'fundom';
 
-const [getState, setState, pauserResumer, releaser] = funState(1);
+const [getState, setState] = funState(1);
 
 const subscriber = (val) => {};
+const releaseEffect = () => {};
 
 const value = getState(
-   subscriber, // <- optional subscriber to changes, invoked every time setState provides new value
-   () => {} // <- optional effect when releaser is invoked
+   subscriber, // <- optional subscriber, invoked every time setState provides new value
+   releaseEffect // <- optional effect when subscriber releaser is invoked
 );
 
-pauserResumer(subscriber) // pause target subscriber
+setState((f) => f('pause', subscriber)) // pause target subscriber
+setState((f) => f('pause')) // pause all subscribers
 
 setState(3) // // subscriber is not invoked since state is on pause
 
-pauserResumer() // pause all (in this flow works like resumer since there is only one subscriber and it is already paused)
+setState((f) => f('resume', subscriber)) // resume target subscriber
+setState((f) => f('resume')) // resume all subscribers
 
-setState(4) // subscriber is invoked since state is resumed
+setState(4) // subscriber is invoked with value 4 since state is resumed
 
 setState(4) // subscriber is not invoked since value is the same
 
-releaser(subscriber) // release target subscriber
+setState((f) => f('release', subscriber)) // release target subscriber, releaseEffect gets invoked
 
-releaser() // release all (in this flow is ignored since there are no other subscribers)
+setState((f) => f('release')) // release all subscribers
 
 setState(5) // subscriber is not invoked since state is released
 

@@ -4,14 +4,13 @@ export type FunStateGetter<T> = (
    subCb?: FunStateSub<T>,
    releaseEffect?: FunStateOnReleaseEffect,
 ) => T;
+export type FunStateAction = 'pause' | 'resume' | 'release';
+export type FunStateController<T> = (action: FunStateAction, sub?: FunStateSub<T>) => void;
+export type FunStateSetterCallback<T> = (controller: FunStateController<T>) => void;
+export type FunStateSetter<T> = (value: T | FunStateSetterCallback<T>) => void;
 export type FunState = <T>(
    initialValue: T,
-) => [
-   getter: FunStateGetter<T>,
-   setter: FunStateSub<T>,
-   pauserResumer: (sub?: FunStateSub<T>) => void,
-   releaser: (sub?: FunStateSub<T>) => void,
-];
+) => [getter: FunStateGetter<T>, setter: FunStateSetter<T>];
 
 export type FormatReturnValue = (
    handler: (val: string | number, firstHandle: boolean) => void,
