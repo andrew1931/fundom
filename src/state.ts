@@ -12,20 +12,20 @@ export const funState: FunState = <T>(initialValue: T) => {
    const pausedSubs: FunStateSub<T>[] = [];
    let value: T = initialValue;
 
-   const subExists = (sub: FunStateSub<T>) => {
-      return subs.findIndex(([_sub]) => _sub === sub) > -1;
+   const subIndex = (sub: FunStateSub<T>): number => {
+      return subs.findIndex(([_sub]) => _sub === sub);
    };
 
    const pause = (sub?: FunStateSub<T>) => {
       if (sub) {
-         if (!subExists(sub)) {
+         if (subIndex(sub) === -1) {
             console.warn('[funState] no such subscriber to pause: ', sub);
             return;
          }
          if (pausedSubs.indexOf(sub) === -1) {
             pausedSubs.push(sub);
          } else {
-            console.warn(`ignore pause of ${sub} as it is already paused`);
+            console.warn(`[funState] ignore pause of ${sub} as it is already paused`);
          }
       } else {
          for (const _sub of subs) {
@@ -38,7 +38,7 @@ export const funState: FunState = <T>(initialValue: T) => {
 
    const resume = (sub?: FunStateSub<T>) => {
       if (sub) {
-         if (!subExists(sub)) {
+         if (subIndex(sub) === -1) {
             console.warn('[funState] no such subscriber to pause: ', sub);
             return;
          }
@@ -46,7 +46,7 @@ export const funState: FunState = <T>(initialValue: T) => {
          if (index > -1) {
             pausedSubs.splice(index, 1);
          } else {
-            console.warn(`ignore resume of ${sub} as it is not paused`);
+            console.warn(`[funState] ignore resume of ${sub} as it is not paused`);
          }
       } else {
          pausedSubs.length = 0;
@@ -55,7 +55,7 @@ export const funState: FunState = <T>(initialValue: T) => {
 
    const release = (sub?: FunStateSub<T>): void => {
       if (sub) {
-         const index = subs.findIndex(([_sub]) => _sub === sub);
+         const index = subIndex(sub);
          if (index > -1) {
             const removed = subs.splice(index, 1);
             removed.forEach((item) => item[1]());
@@ -80,7 +80,7 @@ export const funState: FunState = <T>(initialValue: T) => {
             release(sub);
             break;
          default:
-            console.warn(`unknown action ${action} provided`);
+            console.warn(`[funState] unknown action ${action} provided`);
             break;
       }
    };
@@ -122,7 +122,3 @@ export const funState: FunState = <T>(initialValue: T) => {
 
    return [getter, setter];
 };
-
-const [g, s] = funState(0);
-
-s((f) => f('pause'))
