@@ -1,9 +1,10 @@
 export type FunStateSub<T> = (nextValue: T, ...args: any[]) => void;
 export type FunStateOnReleaseEffect = () => void;
-export type FunStateGetter<T> = (
-   subCb?: FunStateSub<T>,
-   releaseEffect?: FunStateOnReleaseEffect,
-) => T;
+export type FunStateGetterOptions = {
+   once?: boolean;
+   releaseEffect?: FunStateOnReleaseEffect;
+};
+export type FunStateGetter<T> = (subCb?: FunStateSub<T>, options?: FunStateGetterOptions) => T;
 export type FunStateAction = 'pause' | 'resume' | 'release';
 export type FunStateController<T> = (action: FunStateAction, sub?: FunStateSub<T>) => void;
 export type FunStateSetterCallback<T> = (controller: FunStateController<T>) => void;
@@ -50,7 +51,6 @@ export type ControlFlowId = string;
 export type ControlFlowContext = {
    snapshot: ElementSnapshot | null;
    comment: Comment | undefined;
-   handler: ControlFlowHandler | undefined;
 };
 export type ElementContext = Record<ControlFlowId, ControlFlowContext>;
 

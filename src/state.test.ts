@@ -11,14 +11,14 @@ describe('testing funState', () => {
 
    test(`funState getter should:
          - return current value;
-         - accept 2 optional callbacks: subscriber and release effect`, () => {
+         - accept 1 optional callback to subscribe and options with releaseEffect callback;`, () => {
       const [getState, setState] = funState(1);
       const subStub = vi.fn();
       const releaseStub = vi.fn();
       expect(getState()).toBe(1);
       setState(2);
       expect(getState()).toBe(2);
-      getState(subStub, releaseStub);
+      getState(subStub, { releaseEffect: releaseStub });
       setState(3);
       expect(getState()).toBe(3);
       expect(subStub).toHaveBeenCalledTimes(1);
@@ -27,6 +27,27 @@ describe('testing funState', () => {
       expect(getState()).toBe(4);
       expect(subStub).toHaveBeenCalledTimes(2);
       expect(releaseStub).toHaveBeenCalledTimes(0);
+   });
+
+   test(`funState getter should add same subscriber once`, () => {
+      const [getState, setState] = funState(1);
+      const subStub = vi.fn();
+      getState(subStub);
+      getState(subStub);
+      setState(3);
+      expect(subStub).toHaveBeenCalledTimes(1);
+   });
+
+   test(`funState getter should invoke subscriber once if once option is true`, () => {
+      const [getState, setState] = funState(1);
+      const subStub = vi.fn();
+      const releaseStub = vi.fn();
+      getState(subStub, { once: true, releaseEffect: releaseStub });
+      setState(2);
+      setState(3);
+      setState(4);
+      expect(subStub).toHaveBeenCalledTimes(1);
+      expect(releaseStub).toHaveBeenCalledTimes(1);
    });
 
    test('funState setter should change state and notify subscribers if new value is provided', () => {
@@ -81,7 +102,7 @@ describe('testing funState', () => {
       const subStub3 = vi.fn();
       const subStub4 = vi.fn();
       const sub3ReleaseEffect = vi.fn();
-      getState(subStub3, sub3ReleaseEffect);
+      getState(subStub3, { releaseEffect: sub3ReleaseEffect });
       getState(subStub4);
       setState({});
       expect(sub3ReleaseEffect).toHaveBeenCalledTimes(0);

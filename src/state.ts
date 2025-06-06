@@ -2,13 +2,13 @@ import { _isFunction, FN_TYPE, FN_TYPE_STATE_GETTER } from './_utils';
 import type {
    FunState,
    FunStateAction,
-   FunStateOnReleaseEffect,
+   FunStateGetterOptions,
    FunStateSetterCallback,
    FunStateSub,
 } from './types';
 
 export const funState: FunState = <T>(initialValue: T) => {
-   const subs: [FunStateSub<T>, FunStateOnReleaseEffect][] = [];
+   const subs: [FunStateSub<T>, FunStateGetterOptions][] = [];
    const pausedSubs: FunStateSub<T>[] = [];
    let value: T = initialValue;
 
@@ -67,12 +67,21 @@ export const funState: FunState = <T>(initialValue: T) => {
          const index = subIndex(sub);
          if (index > -1) {
             const removed = subs.splice(index, 1);
-            removed.forEach((item) => item[1]());
+            if (removed[0]) {
+               const options = removed[0][1];
+               if (_isFunction(options.releaseEffect)) {
+                  options.releaseEffect();
+               }
+            }
          } else {
             console.warn('[funState] no such subscriber to release: ', sub);
          }
       } else {
-         subs.forEach((item) => item[1]());
+         subs.forEach((item) => {
+            if (_isFunction(item[1].releaseEffect)) {
+               item[1].releaseEffect();
+            }
+         });
          subs.length = 0;
       }
    };
@@ -97,17 +106,12 @@ export const funState: FunState = <T>(initialValue: T) => {
    /*
     * @description returns current value, can be used to add subscriber with release effect
     **/
-   const getter = (sub?: FunStateSub<T>, releaseEffect?: FunStateOnReleaseEffect): T => {
-      if (sub !== undefined) {
+   const getter = (sub?: FunStateSub<T>, options?: FunStateGetterOptions): T => {
+      if (sub) {
          if (_isFunction(sub)) {
-            if (releaseEffect !== undefined) {
-               if (_isFunction(releaseEffect)) {
-                  subs.push([sub, releaseEffect]);
-               } else {
-                  console.warn('[funState] provided value is not a function: ', releaseEffect);
-               }
-            } else {
-               subs.push([sub, () => {}]);
+            const usePush = subIndex(sub) === -1;
+            if (usePush) {
+               subs.push([sub, options || {}]);
             }
          } else {
             console.warn('[funState] provided value is not a function: ', sub);
@@ -126,9 +130,12 @@ export const funState: FunState = <T>(initialValue: T) => {
       } else {
          if (!Object.is(arg, value)) {
             value = arg as T;
-            subs.forEach(([sub]) => {
+            subs.forEach(([sub, options]) => {
                if (pausedSubs.indexOf(sub) === -1) {
                   sub(value);
+                  if (options.once) {
+                     release(sub);
+                  }
                }
             });
          }

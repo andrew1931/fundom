@@ -15,15 +15,20 @@ const releaseEffect = () => {};
 
 const value = getState(
    subscriber, // <- optional subscriber, invoked every time setState provides new value
-   releaseEffect // <- optional effect when subscriber releaser is invoked
-);
+   {
+      once: false, // <- optional flag, if true - subscriber will be removed when invoked and release effect is called if provided; default is false
+      releaseEffect // <- optional effect when subscriber releaser is invoked
+   }
+)
 
 setState((f) => f('pause', subscriber)) // pause target subscriber
+
 setState((f) => f('pause')) // pause all subscribers
 
-setState(3) // // subscriber is not invoked since state is on pause
+setState(3) // subscriber is not invoked since state is on pause
 
 setState((f) => f('resume', subscriber)) // resume target subscriber
+
 setState((f) => f('resume')) // resume all subscribers
 
 setState(4) // subscriber is invoked with value 4 since state is resumed
@@ -34,7 +39,7 @@ setState((f) => f('release', subscriber)) // release target subscriber, releaseE
 
 setState((f) => f('release')) // release all subscribers
 
-setState(5) // subscriber is not invoked since state is released
+setState(5) // subscriber is not invoked since all subscribers are released
 
 ```
 
