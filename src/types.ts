@@ -18,6 +18,8 @@ export type FormatReturnValue = (
 
 export type ComputeReturnValue = (handler: (val: unknown, firstHandle: boolean) => void) => void;
 
+export type ControlFlowHandler = (val: any, firstHandle: boolean) => void;
+
 export type IncomingFormatItem =
    | string
    | number
@@ -48,6 +50,7 @@ export type ControlFlowId = string;
 export type ControlFlowContext = {
    snapshot: ElementSnapshot | null;
    comment: Comment | undefined;
+   handler: ControlFlowHandler | undefined;
 };
 export type ElementContext = Record<ControlFlowId, ControlFlowContext>;
 

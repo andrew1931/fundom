@@ -7,6 +7,7 @@ import type {
    ElementContext,
    ControlFlowContext,
    ControlFlowId,
+   ControlFlowHandler,
 } from './types';
 
 export const FN_TYPE = Symbol('fnType');
@@ -41,6 +42,7 @@ export const _createContextItem = (
    return {
       snapshot: _makeSnapshot(el),
       comment,
+      handler: undefined,
    };
 };
 
@@ -93,18 +95,31 @@ export const _ctrlFlowReleaseEffect = (ctrlFlowContext: ControlFlowContext | und
 
 export const _handleUtilityIncomingValue = (
    value: unknown,
-   handler: (val: any, firstHandle: boolean) => void,
+   handler: ControlFlowHandler,
    ctrlFlowContext?: ControlFlowContext,
 ): void => {
    if (_isComputeUtil(value) || _isFormatUtil(value)) {
       value(handler);
    } else {
       if (_isStateGetter(value)) {
-         const val = value(
-            (v) => handler(v, false),
-            () => _ctrlFlowReleaseEffect(ctrlFlowContext),
-         );
-         handler(val, true);
+         if (ctrlFlowContext) {
+            if (!ctrlFlowContext.handler) {
+               ctrlFlowContext.handler = handler;
+               const val = value(
+                  (v) => handler(v, false),
+                  () => {
+                     ctrlFlowContext.snapshot = null;
+                     ctrlFlowContext.handler = undefined;
+                  },
+               );
+               handler(val, true);
+            } else {
+               handler(value(), false);
+            }
+         } else {
+            const val = value((v) => handler(v, false));
+            handler(val, true);
+         }
       } else {
          handler(value, true);
       }

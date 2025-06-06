@@ -181,8 +181,8 @@ export const ifElse$ =
                so it is located in the same order in DOM as it is inside elem$ function
             */
             _appendComment(el, comment, context[parentCtrlFlowId]?.comment);
-            _handleUtilityIncomingValue(condition, handler, context[ctrlFlowId]);
          }
+         _handleUtilityIncomingValue(condition, handler, context[ctrlFlowId]);
          return el;
       };
    };
