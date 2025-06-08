@@ -172,6 +172,7 @@ export const ifElse$ =
                   _applyMutations(el, prevApplied, context, ctrlFlowId, true);
                   _applyMutations(el, targetFns, context, ctrlFlowId, false);
                   prevApplied = targetFns;
+                  prevReverted = [];
                }
             }
          };
@@ -219,6 +220,7 @@ export const switch$ =
                            _applyMutations(el, prevApplied, context, ctrlFlowId, true);
                            _applyMutations(el, fns, context, ctrlFlowId, false);
                            prevApplied = fns;
+                           prevReverted = [];
                         }
                         break;
                      }
@@ -226,7 +228,7 @@ export const switch$ =
                }
             }
          };
-         
+
          if (!(ctrlFlowId in context)) {
             context[ctrlFlowId] = _createContextItem(el, comment);
             _appendComment(el, comment, context[parentCtrlFlowId]?.comment);
