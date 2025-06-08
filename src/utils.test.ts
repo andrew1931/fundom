@@ -11,17 +11,17 @@ describe('testing utils', () => {
       const formatter = fmt$('{}', 0);
       formatter(handlerStub);
       expect(handlerStub).toHaveBeenCalledTimes(1);
-      expect(handlerStub).toHaveBeenCalledWith('0', true);
+      expect(handlerStub).toHaveBeenCalledWith('0');
       vi.clearAllMocks();
 
       const [getPrimitiveState, setPrimitiveState] = funState(5);
       const formatter2 = fmt$('value is: {}', getPrimitiveState);
       formatter2(handlerStub);
       expect(handlerStub).toHaveBeenCalledTimes(1);
-      expect(handlerStub).toHaveBeenCalledWith('value is: 5', true);
+      expect(handlerStub).toHaveBeenCalledWith('value is: 5');
       setPrimitiveState(6);
       expect(handlerStub).toHaveBeenCalledTimes(2);
-      expect(handlerStub).toHaveBeenCalledWith('value is: 6', false);
+      expect(handlerStub).toHaveBeenCalledWith('value is: 6');
       vi.clearAllMocks();
 
       const [getComplexState, setComplexState] = funState({ value: 5 });
@@ -32,10 +32,10 @@ describe('testing utils', () => {
       );
       formatter3(handlerStub);
       expect(handlerStub).toHaveBeenCalledTimes(1);
-      expect(handlerStub).toHaveBeenCalledWith('value is: 6, initial is: 5', true);
+      expect(handlerStub).toHaveBeenCalledWith('value is: 6, initial is: 5');
       setComplexState({ value: 7 });
       expect(handlerStub).toHaveBeenCalledTimes(2);
-      expect(handlerStub).toHaveBeenCalledWith('value is: 8, initial is: 5', false);
+      expect(handlerStub).toHaveBeenCalledWith('value is: 8, initial is: 5');
       vi.clearAllMocks();
 
       const [getInnerState, setInnerState] = funState(5);
@@ -48,13 +48,11 @@ describe('testing utils', () => {
       expect(handlerStub).toHaveBeenCalledTimes(1);
       expect(handlerStub).toHaveBeenCalledWith(
          'I am fmt$ inside fmt$ with value: 5, outer value is: 5',
-         true,
       );
       setInnerState(8);
       expect(handlerStub).toHaveBeenCalledTimes(2);
       expect(handlerStub).toHaveBeenCalledWith(
          'I am fmt$ inside fmt$ with value: 8, outer value is: 5',
-         false,
       );
    });
 
@@ -66,16 +64,16 @@ describe('testing utils', () => {
       const compute = comp$(getState, (v) => v.value + 1);
       compute(handlerStub);
       expect(handlerStub).toHaveBeenCalledTimes(1);
-      expect(handlerStub).toHaveBeenCalledWith(6, true);
+      expect(handlerStub).toHaveBeenCalledWith(6);
       setState({ value: 7 });
       expect(handlerStub).toHaveBeenCalledTimes(2);
-      expect(handlerStub).toHaveBeenCalledWith(8, false);
+      expect(handlerStub).toHaveBeenCalledWith(8);
       vi.clearAllMocks();
 
       // @ts-ignore
       const compute2 = comp$(5, (v) => v + 1);
       compute2(handlerStub);
       expect(handlerStub).toHaveBeenCalledTimes(1);
-      expect(handlerStub).toHaveBeenCalledWith(6, true);
+      expect(handlerStub).toHaveBeenCalledWith(6);
    });
 });

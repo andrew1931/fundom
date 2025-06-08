@@ -11,18 +11,19 @@ import type {
    ComputeReturnValue,
    IncomingFormatItem,
    FunStateGetter,
+   TextValue,
 } from './types';
 
-export const fmt$ = (...values: Array<IncomingFormatItem>): FormatReturnValue => {
+export const fmt$ = <T>(...values: Array<IncomingFormatItem<T>>): FormatReturnValue => {
    formatter[FN_TYPE] = FN_TYPE_FORMAT;
-   function formatter(handler: (val: string | number, firstHandle: boolean) => void) {
+   function formatter(handler: (val: TextValue) => void) {
       const SPLIT_CHAR = '{}';
-      const result: (string | number)[] = [];
+      const result: TextValue[] = [];
 
       if (values.length < 2) {
          console.warn('fmt$ util needs at least 2 arguments to make sense');
          pushToResult(values[0] ?? '');
-         return handler(result.join(''), true);
+         return handler(result.join(''));
       }
 
       if (typeof values[0] === 'string') {
@@ -49,23 +50,23 @@ export const fmt$ = (...values: Array<IncomingFormatItem>): FormatReturnValue =>
          populateResultWithAll();
       }
 
-      function pushToResult(value: IncomingFormatItem) {
+      function pushToResult(value: IncomingFormatItem<T>) {
          let indexAfterPush = result.length;
          if (_isComputeUtil(value) || _isFormatUtil(value)) {
-            value((val, firstHandle) => {
-               if (firstHandle) {
-                  result.push(val as string | number);
+            value((val) => {
+               if (result.length > indexAfterPush) {
+                  result[indexAfterPush] = val as TextValue;
+                  handler(result.join(''));
                } else {
-                  result[indexAfterPush] = val as string | number;
-                  handler(result.join(''), false);
+                  result.push(val as TextValue);
                }
             });
-         } else if (_isStateGetter(value)) {
-            const val = value((v: string | number) => {
+         } else if (_isStateGetter<TextValue>(value)) {
+            const val = value((v: TextValue) => {
                result[indexAfterPush] = v;
-               handler(result.join(''), false);
+               handler(result.join(''));
             });
-            result.push(val);
+            result.push(val as TextValue);
          } else {
             result.push(value);
          }
@@ -77,7 +78,7 @@ export const fmt$ = (...values: Array<IncomingFormatItem>): FormatReturnValue =>
          }
       }
 
-      return handler(result.join(''), true);
+      handler(result.join(''));
    }
    return formatter;
 };
@@ -85,19 +86,19 @@ export const fmt$ = (...values: Array<IncomingFormatItem>): FormatReturnValue =>
 export const comp$ = <T, U>(
    stateGetter: FunStateGetter<T>,
    computer: (val: T) => U,
-): ComputeReturnValue => {
+): ComputeReturnValue<U> => {
    compute[FN_TYPE] = FN_TYPE_COMPUTE;
-   function compute(handler: (val: U, firstHandle: boolean) => void) {
+   function compute(handler: (val: U) => void) {
       if (_isStateGetter(stateGetter)) {
          const val = stateGetter((v: T) => {
-            handler(computer(v), false);
+            handler(computer(v));
          });
-         handler(computer(val), true);
+         handler(computer(val));
       } else {
          console.warn(
             `${stateGetter} is not of FunStateGetter type, passing it to computer function`,
          );
-         handler(computer(stateGetter), true);
+         handler(computer(stateGetter));
       }
    }
    return compute;

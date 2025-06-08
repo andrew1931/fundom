@@ -13,30 +13,23 @@ export type FunState = <T>(
    initialValue: T,
 ) => [getter: FunStateGetter<T>, setter: FunStateSetter<T>];
 
-export type FormatReturnValue = (
-   handler: (val: string | number, firstHandle: boolean) => void,
-) => void;
+export type FunUtilHandler<T> = (val: T) => void;
 
-export type ComputeReturnValue = (handler: (val: unknown, firstHandle: boolean) => void) => void;
+export type FormatReturnValue = (handler: FunUtilHandler<TextValue>) => void;
 
-export type ControlFlowHandler = (val: any, firstHandle: boolean) => void;
+export type ComputeReturnValue<T> = (handler: FunUtilHandler<T>) => void;
 
-export type IncomingFormatItem =
-   | string
-   | number
-   | FunStateGetter<string | number>
-   | ComputeReturnValue
+export type IncomingFormatItem<T> =
+   | TextValue
+   | FunStateGetter<TextValue>
+   | ComputeReturnValue<T>
    | FormatReturnValue;
 
-export type UtilIncomingValue =
-   | string
-   | number
-   | FunStateGetter<string | number>
-   | FormatReturnValue;
+export type UtilIncomingValue = TextValue | FunStateGetter<TextValue> | FormatReturnValue;
 
-export type Condition<T> = boolean | FunStateGetter<T> | ComputeReturnValue;
+export type Condition<T> = boolean | FunStateGetter<T> | ComputeReturnValue<T>;
 
-export type FunDomElementHistoryEvent = Record<string, string | number | boolean>;
+export type CaseReturnValue = (value: any, isLast: boolean) => FunDomUtil[];
 
 export type ElementSnapshot = {
    childrenLength: number;
@@ -60,3 +53,5 @@ export type FunDomUtil = (
    ctrlFlowId: ControlFlowId,
    useRevert: boolean,
 ) => HTMLElement;
+
+export type TextValue = string | number;

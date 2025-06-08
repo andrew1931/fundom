@@ -1,8 +1,6 @@
 node_modules
 dist
-client
-dist-ssr
-*.local
+test
 
 # Editor directories and files
 .vscode/*

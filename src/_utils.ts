@@ -7,13 +7,16 @@ import type {
    ElementContext,
    ControlFlowContext,
    ControlFlowId,
-   ControlFlowHandler,
+   CaseReturnValue,
+   FunUtilHandler,
+   TextValue,
 } from './types';
 
 export const FN_TYPE = Symbol('fnType');
 export const FN_TYPE_FORMAT = Symbol('format');
 export const FN_TYPE_COMPUTE = Symbol('compute');
 export const FN_TYPE_STATE_GETTER = Symbol('stateGetter');
+export const FN_TYPE_CASE_HANDLER = Symbol('caseHandler');
 
 export const _applyMutations = (
    el: HTMLElement,
@@ -60,6 +63,10 @@ export const _randomId = (prefix = ''): string => {
    return Math.random().toString(36).replace('0.', prefix);
 };
 
+/* 
+   NOTE: comment is used for appending element before it
+   so it is located in the same order in DOM as it is inside elem$ function
+*/
 export const _appendComment = (
    el: HTMLElement,
    comment: Comment,
@@ -74,7 +81,7 @@ export const _appendComment = (
    }
 };
 
-export const _isStateGetter = (value: unknown): value is FunStateGetter<unknown> => {
+export const _isStateGetter = <T>(value: unknown): value is FunStateGetter<T> => {
    return _isFunction(value) && (value as any)[FN_TYPE] === FN_TYPE_STATE_GETTER;
 };
 
@@ -82,8 +89,12 @@ export const _isFormatUtil = (value: unknown): value is FormatReturnValue => {
    return _isFunction(value) && (value as any)[FN_TYPE] === FN_TYPE_FORMAT;
 };
 
-export const _isComputeUtil = (value: unknown): value is ComputeReturnValue => {
+export const _isComputeUtil = <T>(value: unknown): value is ComputeReturnValue<T> => {
    return _isFunction(value) && (value as any)[FN_TYPE] === FN_TYPE_COMPUTE;
+};
+
+export const _isCaseUtil = (value: unknown): value is CaseReturnValue => {
+   return _isFunction(value) && (value as any)[FN_TYPE] === FN_TYPE_CASE_HANDLER;
 };
 
 export const _ctrlFlowReleaseEffect = (ctrlFlowContext: ControlFlowContext | undefined): void => {
@@ -92,21 +103,23 @@ export const _ctrlFlowReleaseEffect = (ctrlFlowContext: ControlFlowContext | und
    }
 };
 
-export const _handleUtilityIncomingValue = (
+export const _handleUtilityIncomingValue = <T>(
    value: unknown,
-   handler: ControlFlowHandler,
+   handler: FunUtilHandler<T>,
    ctrlFlowContext?: ControlFlowContext,
 ): void => {
-   if (_isComputeUtil(value) || _isFormatUtil(value)) {
+   if (_isComputeUtil<T>(value)) {
       value(handler);
+   } else if (_isFormatUtil(value)) {
+      value(handler as FunUtilHandler<TextValue>);
    } else {
-      if (_isStateGetter(value)) {
-         const val = value((v) => handler(v, false), {
+      if (_isStateGetter<T>(value)) {
+         const val = value((v) => handler(v), {
             releaseEffect: () => _ctrlFlowReleaseEffect(ctrlFlowContext),
          });
-         handler(val, true);
+         handler(val);
       } else {
-         handler(value, true);
+         handler(value as T);
       }
    }
 };
