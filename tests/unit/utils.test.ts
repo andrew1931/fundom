@@ -1,6 +1,6 @@
 import { describe, expect, test, vi } from 'vitest';
-import { fmt$, comp$ } from './utils';
-import { funState } from './state';
+import { fmt$, comp$ } from '../../src/utils';
+import { funState } from '../../src/state';
 
 describe('testing utils', () => {
    test(`fmt$ should return string formatter which should:

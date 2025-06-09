@@ -1,5 +1,5 @@
 import { describe, expect, test, vi } from 'vitest';
-import { funState } from './state';
+import { funState } from '../../src/state';
 
 describe('testing funState', () => {
    test('funState should return array of 2 functions: getter, setter', () => {

@@ -12,9 +12,9 @@ import {
    _removeChildren,
    _isFunction,
    _createContextItem,
-} from './_utils';
-import { funState } from './state';
-import { fmt$, comp$ } from './utils';
+} from '../../src/_utils';
+import { funState } from '../../src/state';
+import { fmt$, comp$ } from '../../src/utils';
 
 describe('testing internal utils', () => {
    test('_applyMutations should call all provided synchronous functions with provided arguments', () => {

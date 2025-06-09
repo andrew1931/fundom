@@ -1,7 +1,7 @@
 import { describe, expect, test, vi } from 'vitest';
-import { _createContextItem, _makeSnapshot } from './_utils';
-import { elem$, nodes$, list$, ifElse$, switch$, case$, html$, txt$, on$ } from './dom-utils';
-import { funState } from './state';
+import { _createContextItem, _makeSnapshot } from '../../src/_utils';
+import { elem$, nodes$, list$, ifElse$, switch$, case$, html$, txt$, on$ } from '../../src/dom-utils';
+import { funState } from '../../src/state';
 
 describe('testing dom utils', () => {
    test(`elem$ should return function which creates HTML element by passed string type, applies passed mutations to it and returns it`, () => {
