@@ -1,6 +1,6 @@
 import { describe, expect, test, vi } from 'vitest';
 import { _createContextItem, _makeSnapshot } from './_utils';
-import { elem$, nodes$, list$, ifElse$, html$, txt$, on$ } from './dom-utils';
+import { elem$, nodes$, list$, ifElse$, switch$, case$, html$, txt$, on$ } from './dom-utils';
 import { funState } from './state';
 
 describe('testing dom utils', () => {
@@ -189,7 +189,9 @@ describe('testing dom utils', () => {
       // @ts-ignore testing wrong parent
       ifElse(null, null, null, []);
       expect(warnSpy).toHaveBeenCalledTimes(1);
-      expect(warnSpy).toHaveBeenCalledWith('value passed to ifElse$ is not HTMLElement type');
+      expect(warnSpy).toHaveBeenCalledWith(
+         'value passed to ifElse$/if$/switch$ is not HTMLElement type',
+      );
       vi.clearAllMocks();
    });
 
@@ -229,6 +231,86 @@ describe('testing dom utils', () => {
       expect(utilStub2).toHaveBeenCalledTimes(1); // revert
       expect(utilStub3).toHaveBeenCalledTimes(1);
       expect(utilStub4).toHaveBeenCalledTimes(1);
+      vi.clearAllMocks();
+      setState(true);
+      expect(utilStub1).toHaveBeenCalledTimes(1); // revert
+      expect(utilStub2).toHaveBeenCalledTimes(1); // revert
+      expect(utilStub3).toHaveBeenCalledTimes(1);
+      expect(utilStub4).toHaveBeenCalledTimes(1);
+   });
+
+   test('isElse$ should work correctly inside other ifElse$', () => {
+      const parent = document.createElement('div');
+      const utilStub1 = vi.fn();
+      const utilStub2 = vi.fn();
+      const utilStub3 = vi.fn();
+      const utilStub4 = vi.fn();
+      const [getState, setState] = funState(true);
+      const [getState2, setState2] = funState(false);
+
+      const ifElse = ifElse$(getState)(utilStub1, ifElse$(getState2)(utilStub3)(utilStub4))(
+         utilStub2,
+      );
+      ifElse(parent, {}, '', false);
+      expect(utilStub1).toHaveBeenCalledTimes(1);
+      expect(utilStub2).toHaveBeenCalledTimes(0);
+      expect(utilStub3).toHaveBeenCalledTimes(0);
+      expect(utilStub4).toHaveBeenCalledTimes(1);
+      setState2(true);
+      expect(utilStub1).toHaveBeenCalledTimes(1);
+      expect(utilStub2).toHaveBeenCalledTimes(0);
+      expect(utilStub3).toHaveBeenCalledTimes(1);
+      expect(utilStub4).toHaveBeenCalledTimes(2); // + revert call
+      setState(false);
+      expect(utilStub1).toHaveBeenCalledTimes(2); // + revert call
+      expect(utilStub2).toHaveBeenCalledTimes(1);
+      expect(utilStub3).toHaveBeenCalledTimes(2); // + revert call
+      expect(utilStub4).toHaveBeenCalledTimes(2);
+      setState(false); // nothing should change
+      expect(utilStub1).toHaveBeenCalledTimes(2);
+      expect(utilStub2).toHaveBeenCalledTimes(1);
+      expect(utilStub3).toHaveBeenCalledTimes(2);
+      expect(utilStub4).toHaveBeenCalledTimes(2);
+   });
+
+   test('switch$ should call first case$ argument which returns true', () => {
+      const parent = document.createElement('div');
+      const utilStub1 = vi.fn();
+      const utilStub2 = vi.fn();
+      const utilStub3 = vi.fn();
+      const utilStub4 = vi.fn();
+      const [getState, setState] = funState(0);
+      const switchCase = switch$(getState)(
+         case$(1)(utilStub1),
+         case$(2)(utilStub2),
+         case$((v) => v >= 3)(utilStub3),
+         case$()(utilStub4)
+      );
+      switchCase(parent, {}, '', false);
+      expect(utilStub1).toHaveBeenCalledTimes(0);
+      expect(utilStub2).toHaveBeenCalledTimes(0);
+      expect(utilStub3).toHaveBeenCalledTimes(0);
+      expect(utilStub4).toHaveBeenCalledTimes(1);
+      setState(1);
+      expect(utilStub1).toHaveBeenCalledTimes(1);
+      expect(utilStub2).toHaveBeenCalledTimes(0);
+      expect(utilStub3).toHaveBeenCalledTimes(0);
+      expect(utilStub4).toHaveBeenCalledTimes(2); // + revert
+      setState(2);
+      expect(utilStub1).toHaveBeenCalledTimes(2); // + revert
+      expect(utilStub2).toHaveBeenCalledTimes(1);
+      expect(utilStub3).toHaveBeenCalledTimes(0);
+      expect(utilStub4).toHaveBeenCalledTimes(2);
+      setState(3);
+      expect(utilStub1).toHaveBeenCalledTimes(2);
+      expect(utilStub2).toHaveBeenCalledTimes(2); // + revert
+      expect(utilStub3).toHaveBeenCalledTimes(1);
+      expect(utilStub4).toHaveBeenCalledTimes(2);
+      setState(4);
+      expect(utilStub1).toHaveBeenCalledTimes(2);
+      expect(utilStub2).toHaveBeenCalledTimes(2);
+      expect(utilStub3).toHaveBeenCalledTimes(1); // ignored, case is the same
+      expect(utilStub4).toHaveBeenCalledTimes(2);
    });
 
    test('html$ should validate arguments', () => {

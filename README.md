@@ -1,7 +1,7 @@
 ## Fundom
 
 Lightweight JavaScript library to work with DOM api in declarative way with reactive state in functional style.
-It provides a minimum amount of utils to create, mutate and control flow of HTML elements and state api for reactive changes.
+It provides a minimum amount of utils to create, mutate and control flow of HTML elements + state api for reactive changes.
 
 ## Example:
 

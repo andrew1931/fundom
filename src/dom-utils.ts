@@ -30,7 +30,6 @@ export const elem$ = (
    ...utils: FunDomUtil[]
 ): ((...fns: FunDomUtil[]) => HTMLElement) => {
    return (...extraUtils: FunDomUtil[]) => {
-      console.log('create element');
       const el = document.createElement(name);
       _applyMutations(el, [...utils, ...extraUtils], {}, '', false);
       return el;
@@ -146,44 +145,50 @@ export const list$ = <T>(
    };
 };
 
+const _handleControlFlow = <T, U>(data: T, targetFnsGetter: (v: U) => FunDomUtil[]): FunDomUtil => {
+   const ctrlFlowId = _randomId('ctrlFlow_');
+   const comment = document.createComment('');
+   let prevApplied: FunDomUtil[] = [];
+   let prevReverted: FunDomUtil[] = [];
+   return (el, context, parentCtrlFlowId, useRevert) => {
+      if (!_isHtmlElement(el)) {
+         console.warn(new NotHTMLElementError('ifElse$/if$/switch$').message);
+         return el;
+      }
+
+      const handler = (val: U): void => {
+         if (useRevert) {
+            if (prevApplied !== prevReverted) {
+               _applyMutations(el, prevApplied, context, ctrlFlowId, true);
+               prevReverted = prevApplied;
+            }
+         } else {
+            const targetFns = targetFnsGetter(val);
+            if (prevApplied !== targetFns) {
+               _applyMutations(el, prevApplied, context, ctrlFlowId, true);
+               _applyMutations(el, targetFns, context, ctrlFlowId, false);
+               prevApplied = targetFns;
+               prevReverted = [];
+            }
+         }
+      };
+
+      if (!(ctrlFlowId in context)) {
+         context[ctrlFlowId] = _createContextItem(el, comment);
+         _appendComment(el, comment, context[parentCtrlFlowId]?.comment);
+      }
+      _handleUtilityIncomingValue<U>(data, handler, context[ctrlFlowId]);
+      return el;
+   };
+};
+
 export const ifElse$ =
    <T>(condition: Condition<T>) =>
    (...fns1: FunDomUtil[]) =>
    (...fns2: FunDomUtil[]): FunDomUtil => {
-      const ctrlFlowId = _randomId('if_');
-      const comment = document.createComment('');
-      let prevApplied: FunDomUtil[] = [];
-      let prevReverted: FunDomUtil[] = [];
-      return (el, context, parentCtrlFlowId, useRevert) => {
-         if (!_isHtmlElement(el)) {
-            console.warn(new NotHTMLElementError('ifElse$').message);
-            return el;
-         }
-
-         const handler = (val: any): void => {
-            if (useRevert) {
-               if (prevApplied !== prevReverted) {
-                  _applyMutations(el, prevApplied, context, ctrlFlowId, true);
-                  prevReverted = prevApplied;
-               }
-            } else {
-               const targetFns = Boolean(val) ? fns1 : fns2;
-               if (prevApplied !== targetFns) {
-                  _applyMutations(el, prevApplied, context, ctrlFlowId, true);
-                  _applyMutations(el, targetFns, context, ctrlFlowId, false);
-                  prevApplied = targetFns;
-                  prevReverted = [];
-               }
-            }
-         };
-
-         if (!(ctrlFlowId in context)) {
-            context[ctrlFlowId] = _createContextItem(el, comment);
-            _appendComment(el, comment, context[parentCtrlFlowId]?.comment);
-         }
-         _handleUtilityIncomingValue<any>(condition, handler, context[ctrlFlowId]);
-         return el;
-      };
+      return _handleControlFlow(condition, (val) => {
+         return Boolean(val) ? fns1 : fns2;
+      });
    };
 
 export const if$ =
@@ -195,55 +200,26 @@ export const if$ =
 export const switch$ =
    (data: any) =>
    (...cases: CaseReturnValue[]): FunDomUtil => {
-      const ctrlFlowId = _randomId('switch_');
-      const comment = document.createComment('');
-      let prevApplied: FunDomUtil[] = [];
-      let prevReverted: FunDomUtil[] = [];
-      return (el: HTMLElement, context, parentCtrlFlowId, useRevert) => {
-         if (!_isHtmlElement(el)) {
-            console.warn(new NotHTMLElementError('switch$').message);
-            return el;
-         }
-
-         const handler = (val: any): void => {
-            if (useRevert) {
-               if (prevApplied !== prevReverted) {
-                  _applyMutations(el, prevApplied, context, ctrlFlowId, true);
-                  prevReverted = prevApplied;
-               }
-            } else {
-               for (let [index, caseItem] of cases.entries()) {
-                  if (_isCaseUtil(caseItem)) {
-                     const fns = caseItem(val, index === cases.length - 1);
-                     if (fns.length > 0) {
-                        if (prevApplied !== fns) {
-                           _applyMutations(el, prevApplied, context, ctrlFlowId, true);
-                           _applyMutations(el, fns, context, ctrlFlowId, false);
-                           prevApplied = fns;
-                           prevReverted = [];
-                        }
-                        break;
-                     }
-                  }
+      return _handleControlFlow(data, (val) => {
+         for (let [index, caseItem] of cases.entries()) {
+            if (_isCaseUtil(caseItem)) {
+               const fns = caseItem(val, index === cases.length - 1);
+               if (fns.length > 0) {
+                  return fns;
                }
             }
-         };
-
-         if (!(ctrlFlowId in context)) {
-            context[ctrlFlowId] = _createContextItem(el, comment);
-            _appendComment(el, comment, context[parentCtrlFlowId]?.comment);
          }
-         _handleUtilityIncomingValue<any>(data, handler, context[ctrlFlowId]);
-         return el;
-      };
+         return [];
+      });
    };
 
 export const case$ =
-   (caseValue: unknown) =>
+   (caseValue?: unknown) =>
    (...fns: FunDomUtil[]): CaseReturnValue => {
       caseHandler[FN_TYPE] = FN_TYPE_CASE_HANDLER;
       function caseHandler(value: any, isLast: boolean) {
-         if (caseValue === undefined && isLast) { // default case
+         if (caseValue === undefined && isLast) {
+            // default case
             return fns;
          } else if (_isFunction(caseValue)) {
             if (caseValue(value)) {
