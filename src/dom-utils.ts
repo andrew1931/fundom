@@ -3,6 +3,7 @@ import {
    _applyMutations,
    _camelToKebab,
    _createContextItem,
+   _handleControlFlow,
    _handleUtilityIncomingValue,
    _hasChild,
    _isCaseUtil,
@@ -141,43 +142,6 @@ export const list$ = <T>(
 
       _handleUtilityIncomingValue<Array<T>>(data, handler);
 
-      return el;
-   };
-};
-
-const _handleControlFlow = <T, U>(data: T, targetFnsGetter: (v: U) => FunDomUtil[]): FunDomUtil => {
-   const ctrlFlowId = _randomId('ctrlFlow_');
-   const comment = document.createComment('');
-   let prevApplied: FunDomUtil[] = [];
-   let prevReverted: FunDomUtil[] = [];
-   return (el, context, parentCtrlFlowId, useRevert) => {
-      if (!_isHtmlElement(el)) {
-         console.warn(new NotHTMLElementError('ifElse$/if$/switch$').message);
-         return el;
-      }
-
-      const handler = (val: U): void => {
-         if (useRevert) {
-            if (prevApplied !== prevReverted) {
-               _applyMutations(el, prevApplied, context, ctrlFlowId, true);
-               prevReverted = prevApplied;
-            }
-         } else {
-            const targetFns = targetFnsGetter(val);
-            if (prevApplied !== targetFns) {
-               _applyMutations(el, prevApplied, context, ctrlFlowId, true);
-               _applyMutations(el, targetFns, context, ctrlFlowId, false);
-               prevApplied = targetFns;
-               prevReverted = [];
-            }
-         }
-      };
-
-      if (!(ctrlFlowId in context)) {
-         context[ctrlFlowId] = _createContextItem(el, comment);
-         _appendComment(el, comment, context[parentCtrlFlowId]?.comment);
-      }
-      _handleUtilityIncomingValue<U>(data, handler, context[ctrlFlowId]);
       return el;
    };
 };

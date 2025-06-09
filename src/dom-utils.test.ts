@@ -284,7 +284,7 @@ describe('testing dom utils', () => {
          case$(1)(utilStub1),
          case$(2)(utilStub2),
          case$((v) => v >= 3)(utilStub3),
-         case$()(utilStub4)
+         case$()(utilStub4),
       );
       switchCase(parent, {}, '', false);
       expect(utilStub1).toHaveBeenCalledTimes(0);
