@@ -45,82 +45,82 @@ setState(5) // subscriber is not invoked since all subscribers are released
 
 ## DOM utils
 
-### elem$
+### elem
 
 - creates HTML element;
 
 ```typescript
-import { elem$ } from 'fundom';
+import { elem } from 'fundom';
 
-const title = elem$('h1');
+const title = elem('h1');
 
 document.body.appendChild(title());
 ```
 
-### txt$
+### txt
 
 - sets innerText value on current element;
 
 ```typescript
-import { elem$, txt$ } from 'fundom';
+import { elem, txt } from 'fundom';
 
-const title = elem$('h1', txt$('Api reference'));
+const title = elem('h1', txt('Api reference'));
 ```
 
-### html$
+### html
 
 - sets innerHTML value on current element;
 
 ```typescript
-import { elem$, html$ } from 'fundom';
+import { elem, html } from 'fundom';
 
-const title = elem$('h1', html$('<span>Api reference</span>'));
+const title = elem('h1', html('<span>Api reference</span>'));
 ```
 
-### nodes$
+### append
 
 - inserts passed HTML elements into current element;
-- accepts any number of elem$ functions or HTML elements to be inserted into current element;
+- accepts any number of elem functions or HTML elements to be inserted into current element;
 ```typescript
-import { elem$, nodes$ } from 'fundom';
+import { elem, append } from 'fundom';
 
-const section = elem$(
+const section = elem(
    'section',
-   nodes$(
-      elem$('p', txt$('first child')), // can be function
-      elem$('p')(txt$('second child')) // or HTMLElement
+   append(
+      elem('p', txt('first child')), // can be function
+      elem('p')(txt('second child')) // or HTMLElement
    )
 );
 ```
 
-### list$
+### list
 
 - inserts list of HTML elements into current element by provided array;
 
 ```typescript
-import { elem$, nodes$, list$ } from 'fundom';
+import { elem, list } from 'fundom';
 
 const data = [{ value: 'one' }, { value: 'two' }];
 
-const section = elem$(
+const section = elem(
    'section',
-   list$(data, (item, index) => {
-      return elem$('p', txt$(item.value))
+   list(data, (item, index) => {
+      return elem('p', txt(item.value))
    })
 );
 ```
 
-### style$
+### style
 
 - applies inline styles to current element;
 - style keys can be passed either in camel or kebab case;
 
 ```typescript
-import { elem$, style$ } from 'fundom';
+import { elem, style } from 'fundom';
 
-const section = elem$(
+const section = elem(
    'section',
-   style$({
+   style({
       fontSize: '1em',
       backgroundColor: '#f2f2f2',
       'padding-top': '10px' // can be paddingTop as well
@@ -128,76 +128,76 @@ const section = elem$(
 );
 ```
 
-### class$
+### classList
 
 - adds classes to current element;
 
 ```typescript
-import { elem$, class$ } from 'fundom';
+import { elem, classList } from 'fundom';
 
-const section = elem$(
+const section = elem(
    'section',
-   class$('padding-md', 'flex', 'justify-top')
+   classList('padding-md', 'flex', 'justify-top')
 );
 ```
 
-### attr$
+### attr
 
 - adds attributes to current element;
 
 ```typescript
-import { elem$, attr$ } from 'fundom';
+import { elem, attr } from 'fundom';
 
-const input = elem$(
+const input = elem(
    'input',
-   attr$({ type: 'search', name: 'search-user' })
+   attr({ type: 'search', name: 'search-user' })
 );
 ```
 
-### ifElse$
+### ifElse
 
 - applies utilities from second function and reverts utilities from third function if condition is truthy or the other way around;
 
 ```typescript
-import { elem$, ifElse$, class$, funState } from 'fundom';
+import { elem, ifElse, classList, funState } from 'fundom';
 
 const [getLoading, setLoading] = funState(true);
 
-const div = elem$(
+const div = elem(
    'div',
-   ifElse$(getLoading)(
-      elem$('span', txt$('loading...')),
-      class$('loading-users')
+   ifElse(getLoading)(
+      elem('span', txt('loading...')),
+      classList('loading-users')
    )(
-      elem$('span', txt$('loaded')),
+      elem('span', txt('loaded')),
    )
 );
 ```
 
-### if$
+### ifOnly
 
 - applies utilities from second function if condition is truthy or reverts them otherwise;
 
 ```typescript
-import { elem$, if$, class$, funState } from 'fundom';
+import { elem, ifOnly, classList, funState } from 'fundom';
 
 const [getLoading, setLoading] = funState(true);
 
-const div = elem$(
+const div = elem(
    'div',
-   if$(getLoading)(
-      class$('loading-users')
+   ifOnly(getLoading)(
+      classList('loading-users')
    )
 );
 ```
 
-### on$
+### on
 
 - adds event listener with provided type and callback (types are the same as for addEventListener method of document);
 - accepts optional FunStateGetter<boolean> to removeEventListener;
 
 ```typescript
-import { elem$, on$, funState } from 'fundom';
+import { elem, on, funState } from 'fundom';
 
 const [unsubscribeClick, setUnsubscribeClick] = funState(false);
 
@@ -205,55 +205,55 @@ setTimeout(() => {
    setUnsubscribeClick(true);
 }, 5000);
 
-const button = elem$(
+const button = elem(
    'button',
-   on$('click', (e) => console.log(e), unsubscribeClick)
+   on('click', (e) => console.log(e), unsubscribeClick)
 );
 ```
 
 ## Compute utils
 
-### comp$
+### cmp
 
 - utility to compute value of reactive state (or any data if you wish) with callback;
 - accepts state getter and computer callback which is invoked every time state changes;
 
 ```typescript
-import { elem$, if$, attr$, comp$, funState } from 'fundom';
+import { elem, ifOnly, attr, cmp, funState } from 'fundom';
 
 const [getCount, setCount] = funState({ count: 1 });
 
-const button = elem$(
+const button = elem(
    'button',
-   on$('click', () => setCount({ count: getCount().count + 1 })
-   if$(comp$(getCount, (val) => val.count > 5))(
-      attr$({ disabled: 'disabled' })
+   on('click', () => setCount({ count: getCount().count + 1 })
+   ifOnly(cmp(getCount, (val) => val.count > 5))(
+      attr({ disabled: 'disabled' })
    )
 );
 ```
 
-### fmt$
+### fmt
 
 - utility to format strings with reactive state
 
 ```typescript
-import { elem$, txt$, comp$, fmt$, funState } from 'fundom';
+import { elem, txt, cmp, fmt, funState } from 'fundom';
 
 const [getCount, setCount] = funState(1);
 
 const buttonConfig = { id: 1, name: 'submit' };
 
-const button = elem$(
+const button = elem(
    'button',
-   txt$(fmt$('value of counter: {} on button {}', getCount, buttonConfig.name))
+   txt(fmt('value of counter: {} on button {}', getCount, buttonConfig.name))
 );
 
-const span = elem$(
+const span = elem(
    'span',
-   txt$(
-      fmt$(
+   txt(
+      fmt(
          'next value of counter: {}',
-         comp$(getCount, (count) => count + 1)
+         cmp(getCount, (count) => count + 1)
       )
    )
 );

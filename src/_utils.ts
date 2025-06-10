@@ -65,7 +65,7 @@ export const _randomId = (prefix = ''): string => {
 
 /* 
    NOTE: comment is used for appending element before it
-   so it is located in the same order in DOM as it is inside elem$ function
+   so it is located in the same order in DOM as it is inside elem function
 */
 export const _appendComment = (
    el: HTMLElement,
@@ -134,7 +134,7 @@ export const _handleControlFlow = <T, U>(
    let prevReverted: FunDomUtil[] = [];
    return (el, context, parentCtrlFlowId, useRevert) => {
       if (!_isHtmlElement(el)) {
-         console.warn(new NotHTMLElementError('ifElse$/if$/switch$').message);
+         console.warn(new NotHTMLElementError('ifElse/ifOnly/match').message);
          return el;
       }
 

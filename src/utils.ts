@@ -14,14 +14,14 @@ import type {
    TextValue,
 } from './types';
 
-export const fmt$ = <T>(...values: Array<IncomingFormatItem<T>>): FormatReturnValue => {
+export const fmt = <T>(...values: Array<IncomingFormatItem<T>>): FormatReturnValue => {
    formatter[FN_TYPE] = FN_TYPE_FORMAT;
    function formatter(handler: (val: TextValue) => void) {
       const SPLIT_CHAR = '{}';
       const result: TextValue[] = [];
 
       if (values.length < 2) {
-         console.warn('fmt$ util needs at least 2 arguments to make sense');
+         console.warn('fmt util needs at least 2 arguments to make sense');
          pushToResult(values[0] ?? '');
          return handler(result.join(''));
       }
@@ -39,13 +39,13 @@ export const fmt$ = <T>(...values: Array<IncomingFormatItem<T>>): FormatReturnVa
             }
          } else {
             console.warn(
-               `number of ${SPLIT_CHAR} in fmt$ util is not equal to number of dynamic arguments, falling back to concatenating all`,
+               `number of ${SPLIT_CHAR} in fmt util is not equal to number of dynamic arguments, falling back to concatenating all`,
             );
             populateResultWithAll();
          }
       } else {
          console.warn(
-            `first argument of fmt$ is not a string type, falling back to concatenating all`,
+            `first argument of fmt is not a string type, falling back to concatenating all`,
          );
          populateResultWithAll();
       }
@@ -83,7 +83,7 @@ export const fmt$ = <T>(...values: Array<IncomingFormatItem<T>>): FormatReturnVa
    return formatter;
 };
 
-export const comp$ = <T, U>(
+export const cmp = <T, U>(
    stateGetter: FunStateGetter<T>,
    computer: (val: T) => U,
 ): ComputeReturnValue<U> => {
@@ -95,9 +95,7 @@ export const comp$ = <T, U>(
          });
          handler(computer(val));
       } else {
-         console.warn(
-            `${stateGetter} is not of FunStateGetter type, passing it to computer function`,
-         );
+         console.warn(`${stateGetter} is not of FunStateGetter type, passing it to cmp function`);
          handler(computer(stateGetter));
       }
    }
