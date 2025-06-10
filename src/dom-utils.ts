@@ -37,39 +37,39 @@ export const elem = (
    };
 };
 
-export const append = (...values: (() => HTMLElement)[] | HTMLElement[]): FunDomUtil => {
-   const children: HTMLElement[] = [];
+export const children = (...values: (() => HTMLElement)[] | HTMLElement[]): FunDomUtil => {
+   const childrenElements: HTMLElement[] = [];
    return (el, context, ctrlFlowId, useRevert) => {
       if (!_isHtmlElement(el)) {
-         console.warn(new NotHTMLElementError('append').message);
+         console.warn(new NotHTMLElementError('children').message);
          return el;
       }
       // TODO: compare performance with createDocumentFragment
 
-      if (children.length === 0) {
+      if (childrenElements.length === 0) {
          for (let element of values) {
             if (_isFunction(element)) {
                const el = element();
                if (_isHtmlElement(el)) {
-                  children.push(el);
+                  childrenElements.push(el);
                } else {
-                  console.warn('[append] passed function does not return HTMLElement type');
+                  console.warn('[children] passed function does not return HTMLElement type');
                }
             } else {
                if (_isHtmlElement(element)) {
-                  children.push(element);
+                  childrenElements.push(element);
                } else {
-                  console.warn('[append] passed argument is not HTMLElement type');
+                  console.warn('[children] passed argument is not HTMLElement type');
                }
             }
          }
       }
 
       if (useRevert) {
-         _removeChildren(el, ...children);
+         _removeChildren(el, ...childrenElements);
       } else {
          const comment = context[ctrlFlowId]?.comment;
-         for (let child of children) {
+         for (let child of childrenElements) {
             if (!_hasChild(el, child)) {
                if (comment && comment instanceof Comment) {
                   el.insertBefore(child, comment);
@@ -79,6 +79,21 @@ export const append = (...values: (() => HTMLElement)[] | HTMLElement[]): FunDom
             }
          }
       }
+      return el;
+   };
+};
+
+export const child = (name: string, ...utils: FunDomUtil[]): FunDomUtil => {
+   let childElem: HTMLElement | null = null;
+   return (el, context, ctrlFlowId, useRevert) => {
+      if (!_isHtmlElement(el)) {
+         console.warn(new NotHTMLElementError('child').message);
+         return el;
+      }
+      if (!_isHtmlElement(childElem)) {
+         childElem = elem(name, ...utils)();
+      }
+      _applyMutations(el, [children(childElem as HTMLElement)], context, ctrlFlowId, useRevert);
       return el;
    };
 };
@@ -108,18 +123,18 @@ export const list = <T>(
             return;
          }
 
-         const children: HTMLElement[] = [];
+         const curChildren: HTMLElement[] = [];
          if (prevItems.length > 0) {
             for (let [i, item] of items.entries()) {
                if (Object.is(item, prevItems[i])) {
-                  children.push(prevChildren[i] as HTMLElement);
+                  curChildren.push(prevChildren[i] as HTMLElement);
                } else {
                   const child = newElementFn(item, i)();
-                  children.push(child);
+                  curChildren.push(child);
                   if (i < prevItems.length) {
                      el.replaceChild(child, prevChildren[i] as HTMLElement);
                   } else {
-                     _applyMutations(el, [append(child)], context, ctrlFlowId, useRevert);
+                     _applyMutations(el, [children(child)], context, ctrlFlowId, useRevert);
                   }
                }
             }
@@ -131,12 +146,12 @@ export const list = <T>(
             }
          } else {
             for (let [i, item] of items.entries()) {
-               children.push(newElementFn(item, i)());
+               curChildren.push(newElementFn(item, i)());
             }
-            _applyMutations(el, [append(...children)], context, ctrlFlowId, useRevert);
+            _applyMutations(el, [children(...curChildren)], context, ctrlFlowId, useRevert);
          }
 
-         prevChildren = children;
+         prevChildren = curChildren;
          prevItems = items;
       };
 
@@ -347,13 +362,13 @@ export const attr = (props: Record<string, UtilIncomingValue>): FunDomUtil => {
 export const on = (
    type: string,
    cb: (e: Event) => void,
-   options: {
+   options?: {
       capture?: boolean;
       once?: boolean;
       passive?: boolean;
       signal?: AbortSignal;
-      offTrigger?: FunStateGetter<boolean>,
-   }
+      offTrigger?: FunStateGetter<boolean>;
+   },
 ): FunDomUtil => {
    return (el) => {
       if (!_isHtmlElement(el)) {
@@ -363,7 +378,7 @@ export const on = (
 
       el.addEventListener(type, cb, options);
 
-      if (options.offTrigger) {
+      if (options && options.offTrigger) {
          options.offTrigger(() => {
             el.removeEventListener(type, cb);
          });

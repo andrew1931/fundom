@@ -77,16 +77,16 @@ import { elem, html } from 'fundom';
 const title = elem('h1', html('<span>Api reference</span>'));
 ```
 
-### append
+### children
 
 - inserts passed HTML elements into current element;
 - accepts any number of elem functions or HTML elements to be inserted into current element;
 ```typescript
-import { elem, append } from 'fundom';
+import { elem, children } from 'fundom';
 
 const section = elem(
    'section',
-   append(
+   children(
       elem('p', txt('first child')), // can be function
       elem('p')(txt('second child')) // or HTMLElement
    )
