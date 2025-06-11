@@ -69,12 +69,12 @@ export const children = (...values: (() => HTMLElement)[] | HTMLElement[]): FunD
          _removeChildren(el, ...childrenElements);
       } else {
          const comment = context[ctrlFlowId]?.comment;
-         for (let child of childrenElements) {
-            if (!_hasChild(el, child)) {
+         for (let childElem of childrenElements) {
+            if (!_hasChild(el, childElem)) {
                if (comment && comment instanceof Comment) {
-                  el.insertBefore(child, comment);
+                  el.insertBefore(childElem, comment);
                } else {
-                  el.appendChild(child);
+                  el.appendChild(childElem);
                }
             }
          }
@@ -129,12 +129,12 @@ export const list = <T>(
                if (Object.is(item, prevItems[i])) {
                   curChildren.push(prevChildren[i] as HTMLElement);
                } else {
-                  const child = newElementFn(item, i)();
-                  curChildren.push(child);
+                  const childElem = newElementFn(item, i)();
+                  curChildren.push(childElem);
                   if (i < prevItems.length) {
-                     el.replaceChild(child, prevChildren[i] as HTMLElement);
+                     el.replaceChild(childElem, prevChildren[i] as HTMLElement);
                   } else {
-                     _applyMutations(el, [children(child)], context, ctrlFlowId, useRevert);
+                     _applyMutations(el, [children(childElem)], context, ctrlFlowId, useRevert);
                   }
                }
             }
