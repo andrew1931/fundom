@@ -14,6 +14,12 @@
    "files": [
       "dist"
    ],
+   "keywords": [
+      "reactive",
+      "functional-programming",
+      "declarative-ui",
+      "dom-manipulation"
+   ],
    "scripts": {
       "build": "npx tsc --emitDeclarationOnly && rollup -c",
       "lint": "eslint --ext .ts .",

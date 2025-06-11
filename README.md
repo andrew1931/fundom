@@ -20,23 +20,28 @@ Simple counter
    document.body.append(counter());
 ```
 
-## Existing features
+## Existing utils
 
-- creating HTML elements;
-- rendering lists of HTML elements from arrays of data;
-- changing current element's state: styles, attributes, classes, children;
-- conditionally changing current element's state;
-- adding and removing current element's event listeners;
-- creating reactive state;
+- Creating HTML elements;
 
-## Not existing features
+- Rendering lists of HTML elements from arrays of data;
 
-- utils for removing elements, attributes, classes, styles -  *considered as side effects and should be implemented with control flow utils (i.e. ifEls, ifOnly, match) by providing state getter as value*;
-- utils to change other elements state - *considered as side effects, each element has its own context, all implemented utils can mutate only current element's state. All elements' changes should be implemented via reactive state*;
-- utility to get reference to other element - *Fundom does not have created element's registry; if one needs to mutate other element from outside elem utility or to read its properties - elem utility returns HTML element*
-- utils like *createRoot*, *render* or *mount* - *Fundom does not have any virtual DOM or global context or any registries, all utils are independent units. Fundom is designed to create HTML elements in declarative way and mutate them by providing reactive states*;
-- life cycle hooks - *same reason as in previous bullet*;
+- Mutating current element's state (also conditionally): styles, attributes, classes, children;
+
+- Adding and removing current element's event listeners;
+
+- Creating reactive state;
+
+## Not existing utils
+
+- Removing elements, attributes, classes, styles -  *considered as side effects and should be implemented with the help of control flow utils (i.e. ifEls, ifOnly, match) by providing state getter as value*;
+
+- Changing other elements state - *considered as side effects, each element has its own context, all implemented utils can mutate only current element's state. All elements' changes should be implemented via reactive state*;
+
+- Getting reference to other element - *Fundom does not have created element's registry; if one needs to mutate other element from outside elem utility or to read its properties - elem utility returns direct HTML element*;
+
+- Controlling life cycle hooks or utils like *createRoot*, *render* or *mount* - *Fundom does not have any virtual DOM or global context or any registries, all utils are independent units. Fundom is designed to create HTML elements in declarative way and mutate them by providing reactive states*;
 
 ## Docs
 
-- [Api reference](./docs/api-reference.md)
+- [Api reference](https://github.com/andrew1931/fundom/blob/master/docs/api-reference.md)
