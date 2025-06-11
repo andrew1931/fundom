@@ -15,4 +15,3 @@ if (!['patch', 'minor', 'major'].includes(type)) {
 run(`npm version ${type}`);
 run('git push');
 run('git push --tags');
-

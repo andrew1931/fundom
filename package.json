@@ -1,5 +1,5 @@
 {
-   "name": "fundom",
+   "name": "fundom.js",
    "version": "0.1.0",
    "description": "JS library for creating reactive ui elements in declarative way",
    "author": "Andrei Kuzmich",
@@ -11,6 +11,9 @@
       "import": "./dist/index.esm.js",
       "require": "./dist/index.umd.js"
    },
+   "files": [
+      "dist"
+   ],
    "scripts": {
       "build": "npx tsc --emitDeclarationOnly && rollup -c",
       "lint": "eslint --ext .ts .",
