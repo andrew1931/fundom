@@ -13,6 +13,8 @@ export type FunState = <T>(
    initialValue: T,
 ) => [getter: FunStateGetter<T>, setter: FunStateSetter<T>];
 
+export type TagName = keyof HTMLElementTagNameMap;
+
 export type FunUtilHandler<T> = (val: T) => void;
 
 export type FormatReturnValue = (handler: FunUtilHandler<TextValue>) => void;
@@ -29,7 +31,7 @@ export type UtilIncomingValue = TextValue | FunStateGetter<TextValue> | FormatRe
 
 export type Condition<T> = boolean | FunStateGetter<T> | ComputeReturnValue<T>;
 
-export type CaseReturnValue = (value: any, isLast: boolean) => FunDomUtil[];
+export type CaseReturnValue<K extends TagName> = (value: any, isLast: boolean) => FunDomUtil<K>[];
 
 export type ElementSnapshot = {
    childrenLength: number;
@@ -47,11 +49,11 @@ export type ControlFlowContext = {
 };
 export type ElementContext = Record<ControlFlowId, ControlFlowContext>;
 
-export type FunDomUtil = (
-   el: HTMLElement,
+export type FunDomUtil<K extends keyof HTMLElementTagNameMap> = (
+   el: HTMLElementTagNameMap[K],
    context: ElementContext,
    ctrlFlowId: ControlFlowId,
    useRevert: boolean,
-) => HTMLElement;
+) => HTMLElementTagNameMap[K];
 
 export type TextValue = string | number;

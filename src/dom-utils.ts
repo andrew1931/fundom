@@ -24,21 +24,21 @@ import type {
    Condition,
    CaseReturnValue,
    TextValue,
+   TagName,
 } from './types';
 
-export const elem = (
-   name: string,
-   ...utils: FunDomUtil[]
-): ((...fns: FunDomUtil[]) => HTMLElement) => {
-   return (...extraUtils: FunDomUtil[]) => {
+export const elem = <K extends TagName>(name: K, ...utils: FunDomUtil<K>[]) => {
+   return (...extraUtils: FunDomUtil<K>[]): HTMLElementTagNameMap[K] => {
       const el = document.createElement(name);
       _applyMutations(el, [...utils, ...extraUtils], {}, '', false);
       return el;
    };
 };
 
-export const children = (...values: (() => HTMLElement)[] | HTMLElement[]): FunDomUtil => {
-   const childrenElements: HTMLElement[] = [];
+export const children = <K extends TagName>(
+   ...values: Array<(() => HTMLElementTagNameMap[K]) | HTMLElementTagNameMap[K]>
+): FunDomUtil<K> => {
+   const childrenElements: HTMLElementTagNameMap[K][] = [];
    return (el, context, ctrlFlowId, useRevert) => {
       if (!_isHtmlElement(el)) {
          console.warn(new NotHTMLElementError('children').message);
@@ -83,8 +83,8 @@ export const children = (...values: (() => HTMLElement)[] | HTMLElement[]): FunD
    };
 };
 
-export const child = (name: string, ...utils: FunDomUtil[]): FunDomUtil => {
-   let childElem: HTMLElement | null = null;
+export const child = <K extends TagName>(name: K, ...utils: FunDomUtil<K>[]): FunDomUtil<K> => {
+   let childElem: HTMLElementTagNameMap[K] | null = null;
    return (el, context, ctrlFlowId, useRevert) => {
       if (!_isHtmlElement(el)) {
          console.warn(new NotHTMLElementError('child').message);
@@ -93,17 +93,23 @@ export const child = (name: string, ...utils: FunDomUtil[]): FunDomUtil => {
       if (!_isHtmlElement(childElem)) {
          childElem = elem(name, ...utils)();
       }
-      _applyMutations(el, [children(childElem as HTMLElement)], context, ctrlFlowId, useRevert);
+      _applyMutations(
+         el,
+         [children(childElem as HTMLElementTagNameMap[K])],
+         context,
+         ctrlFlowId,
+         useRevert,
+      );
       return el;
    };
 };
 
-export const list = <T>(
+export const list = <T, K extends TagName>(
    data: Array<T> | FunStateGetter<Array<T>>,
-   newElementFn: (item: T, index: number) => ReturnType<typeof elem>,
-): FunDomUtil => {
+   newElementFn: (item: T, index: number) => ReturnType<typeof elem<K>>,
+): FunDomUtil<K> => {
    const comment = document.createComment('');
-   let prevChildren: HTMLElement[] = [];
+   let prevChildren: HTMLElementTagNameMap[K][] = [];
    let prevItems: Array<T> = [];
    return (el, context, ctrlFlowId, useRevert) => {
       if (!_isHtmlElement(el)) {
@@ -123,16 +129,16 @@ export const list = <T>(
             return;
          }
 
-         const curChildren: HTMLElement[] = [];
+         const curChildren: HTMLElementTagNameMap[K][] = [];
          if (prevItems.length > 0) {
             for (let [i, item] of items.entries()) {
                if (Object.is(item, prevItems[i])) {
-                  curChildren.push(prevChildren[i] as HTMLElement);
+                  curChildren.push(prevChildren[i] as HTMLElementTagNameMap[K]);
                } else {
                   const childElem = newElementFn(item, i)();
                   curChildren.push(childElem);
                   if (i < prevItems.length) {
-                     el.replaceChild(childElem, prevChildren[i] as HTMLElement);
+                     el.replaceChild(childElem, prevChildren[i] as HTMLElementTagNameMap[K]);
                   } else {
                      _applyMutations(el, [children(childElem)], context, ctrlFlowId, useRevert);
                   }
@@ -141,7 +147,7 @@ export const list = <T>(
 
             if (prevItems.length > items.length) {
                for (let i = prevItems.length - 1; i >= items.length; i--) {
-                  _removeChildren(el, prevChildren[i] as HTMLElement);
+                  _removeChildren(el, prevChildren[i] as HTMLElementTagNameMap[K]);
                }
             }
          } else {
@@ -162,23 +168,23 @@ export const list = <T>(
 };
 
 export const ifElse =
-   <T>(condition: Condition<T>) =>
-   (...fns1: FunDomUtil[]) =>
-   (...fns2: FunDomUtil[]): FunDomUtil => {
+   <T, K extends TagName>(condition: Condition<T>) =>
+   (...fns1: FunDomUtil<K>[]) =>
+   (...fns2: FunDomUtil<K>[]): FunDomUtil<K> => {
       return _handleControlFlow(condition, (val) => {
          return Boolean(val) ? fns1 : fns2;
       });
    };
 
 export const ifOnly =
-   <T>(condition: Condition<T>) =>
-   (...fns1: FunDomUtil[]): FunDomUtil => {
-      return ifElse(condition)(...fns1)();
+   <T, K extends TagName>(condition: Condition<T>) =>
+   (...fns1: FunDomUtil<K>[]): FunDomUtil<K> => {
+      return ifElse<T, K>(condition)(...fns1)();
    };
 
 export const match =
-   (data: any) =>
-   (...cases: CaseReturnValue[]): FunDomUtil => {
+   <K extends TagName>(data: any) =>
+   (...cases: CaseReturnValue<K>[]): FunDomUtil<K> => {
       return _handleControlFlow(data, (val) => {
          for (let [index, caseItem] of cases.entries()) {
             if (_isCaseUtil(caseItem)) {
@@ -193,8 +199,8 @@ export const match =
    };
 
 export const matchCase =
-   (caseValue?: unknown) =>
-   (...fns: FunDomUtil[]): CaseReturnValue => {
+   <K extends TagName>(caseValue?: unknown) =>
+   (...fns: FunDomUtil<K>[]): CaseReturnValue<K> => {
       caseHandler[FN_TYPE] = FN_TYPE_CASE_HANDLER;
       function caseHandler(value: any, isLast: boolean) {
          if (caseValue === undefined && isLast) {
@@ -214,7 +220,7 @@ export const matchCase =
       return caseHandler;
    };
 
-export const html = (value: UtilIncomingValue): FunDomUtil => {
+export const html = <K extends TagName>(value: UtilIncomingValue): FunDomUtil<K> => {
    return (el, context, ctrlFlowId, useRevert) => {
       if (!_isHtmlElement(el)) {
          console.warn(new NotHTMLElementError('html').message);
@@ -238,7 +244,7 @@ export const html = (value: UtilIncomingValue): FunDomUtil => {
    };
 };
 
-export const txt = (value: UtilIncomingValue): FunDomUtil => {
+export const txt = <K extends TagName>(value: UtilIncomingValue): FunDomUtil<K> => {
    return (el, context, ctrlFlowId, useRevert) => {
       if (!_isHtmlElement(el)) {
          console.warn(new NotHTMLElementError('txt').message);
@@ -262,7 +268,9 @@ export const txt = (value: UtilIncomingValue): FunDomUtil => {
    };
 };
 
-export const style = (props: Record<string, UtilIncomingValue>): FunDomUtil => {
+export const style = <K extends TagName>(
+   props: Record<string, UtilIncomingValue>,
+): FunDomUtil<K> => {
    return (el, context, ctrlFlowId, useRevert) => {
       if (!_isHtmlElement(el)) {
          console.warn(new NotHTMLElementError('style').message);
@@ -293,7 +301,7 @@ export const style = (props: Record<string, UtilIncomingValue>): FunDomUtil => {
    };
 };
 
-export const classList = (...classNames: UtilIncomingValue[]): FunDomUtil => {
+export const classList = <K extends TagName>(...classNames: UtilIncomingValue[]): FunDomUtil<K> => {
    return (el, context, ctrlFlowId, useRevert) => {
       if (!_isHtmlElement(el)) {
          console.warn(new NotHTMLElementError('classList').message);
@@ -329,7 +337,9 @@ export const classList = (...classNames: UtilIncomingValue[]): FunDomUtil => {
    };
 };
 
-export const attr = (props: Record<string, UtilIncomingValue>): FunDomUtil => {
+export const attr = <K extends TagName>(
+   props: Record<string, UtilIncomingValue>,
+): FunDomUtil<K> => {
    return (el, context, ctrlFlowId, useRevert) => {
       if (!_isHtmlElement(el)) {
          console.warn(new NotHTMLElementError('attr').message);
@@ -359,7 +369,7 @@ export const attr = (props: Record<string, UtilIncomingValue>): FunDomUtil => {
    };
 };
 
-export const on = (
+export const on = <K extends TagName>(
    type: string,
    cb: (e: Event) => void,
    options?: {
@@ -369,7 +379,7 @@ export const on = (
       signal?: AbortSignal;
       offTrigger?: FunStateGetter<boolean>;
    },
-): FunDomUtil => {
+): FunDomUtil<K> => {
    return (el) => {
       if (!_isHtmlElement(el)) {
          console.warn(new NotHTMLElementError('on').message);

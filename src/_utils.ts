@@ -10,6 +10,7 @@ import type {
    CaseReturnValue,
    FunUtilHandler,
    TextValue,
+   TagName,
 } from './types';
 
 export const FN_TYPE = Symbol('fnType');
@@ -18,9 +19,9 @@ export const FN_TYPE_COMPUTE = Symbol('compute');
 export const FN_TYPE_STATE_GETTER = Symbol('stateGetter');
 export const FN_TYPE_CASE_HANDLER = Symbol('caseHandler');
 
-export const _applyMutations = (
-   el: HTMLElement,
-   fns: FunDomUtil[],
+export const _applyMutations = <K extends TagName>(
+   el: HTMLElementTagNameMap[K],
+   fns: FunDomUtil<K>[],
    context: ElementContext,
    ctrlFlowId: ControlFlowId,
    useRevert: boolean,
@@ -93,7 +94,7 @@ export const _isComputeUtil = <T>(value: unknown): value is ComputeReturnValue<T
    return _isFunction(value) && (value as any)[FN_TYPE] === FN_TYPE_COMPUTE;
 };
 
-export const _isCaseUtil = (value: unknown): value is CaseReturnValue => {
+export const _isCaseUtil = <K extends TagName>(value: unknown): value is CaseReturnValue<K> => {
    return _isFunction(value) && (value as any)[FN_TYPE] === FN_TYPE_CASE_HANDLER;
 };
 
@@ -124,14 +125,14 @@ export const _handleUtilityIncomingValue = <T>(
    }
 };
 
-export const _handleControlFlow = <T, U>(
+export const _handleControlFlow = <T, U, K extends TagName>(
    data: T,
-   targetFnsGetter: (v: U) => FunDomUtil[],
-): FunDomUtil => {
+   targetFnsGetter: (v: U) => FunDomUtil<K>[],
+): FunDomUtil<K> => {
    const ctrlFlowId = _randomId('ctrlFlow_');
    const comment = document.createComment('');
-   let prevApplied: FunDomUtil[] = [];
-   let prevReverted: FunDomUtil[] = [];
+   let prevApplied: FunDomUtil<K>[] = [];
+   let prevReverted: FunDomUtil<K>[] = [];
    return (el, context, parentCtrlFlowId, useRevert) => {
       if (!_isHtmlElement(el)) {
          console.warn(new NotHTMLElementError('ifElse/ifOnly/match').message);
