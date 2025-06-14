@@ -35,10 +35,10 @@ export const elem = <K extends TagName>(name: K, ...utils: FunDomUtil<K>[]) => {
    };
 };
 
-export const children = <K extends TagName>(
-   ...values: Array<(() => HTMLElementTagNameMap[K]) | HTMLElementTagNameMap[K]>
+export const children = <K extends TagName, C extends TagName>(
+   ...values: Array<(() => HTMLElementTagNameMap[C]) | HTMLElementTagNameMap[C]>
 ): FunDomUtil<K> => {
-   const childrenElements: HTMLElementTagNameMap[K][] = [];
+   const childrenElements: HTMLElementTagNameMap[C][] = [];
    return (el, context, ctrlFlowId, useRevert) => {
       if (!_isHtmlElement(el)) {
          console.warn(new NotHTMLElementError('children').message);
@@ -83,8 +83,11 @@ export const children = <K extends TagName>(
    };
 };
 
-export const child = <K extends TagName>(name: K, ...utils: FunDomUtil<K>[]): FunDomUtil<K> => {
-   let childElem: HTMLElementTagNameMap[K] | null = null;
+export const child = <K extends TagName, C extends TagName>(
+   name: C,
+   ...utils: FunDomUtil<C>[]
+): FunDomUtil<K> => {
+   let childElem: HTMLElementTagNameMap[C] | null = null;
    return (el, context, ctrlFlowId, useRevert) => {
       if (!_isHtmlElement(el)) {
          console.warn(new NotHTMLElementError('child').message);
@@ -95,7 +98,7 @@ export const child = <K extends TagName>(name: K, ...utils: FunDomUtil<K>[]): Fu
       }
       _applyMutations(
          el,
-         [children(childElem as HTMLElementTagNameMap[K])],
+         [children(childElem as HTMLElementTagNameMap[C])],
          context,
          ctrlFlowId,
          useRevert,
