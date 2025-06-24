@@ -13,7 +13,9 @@ export type FunState = <T>(
    initialValue: T,
 ) => [getter: FunStateGetter<T>, setter: FunStateSetter<T>];
 
-export type ChildrenParams<C extends TagName> = (() => HTMLElementTagNameMap[C]) | HTMLElementTagNameMap[C];
+export type ChildrenParams<C extends TagName> =
+   | (() => HTMLElementTagNameMap[C])
+   | HTMLElementTagNameMap[C];
 
 export type TagName = keyof HTMLElementTagNameMap;
 

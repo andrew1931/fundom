@@ -35,13 +35,12 @@ export const elem = <K extends TagName>(name: K, ...utils: FunDomUtil<K>[]) => {
    };
 };
 
-
 export function children<K extends TagName, C extends TagName>(
    ...values: ChildrenParams<C>[]
 ): FunDomUtil<K>;
 
 export function children<K extends TagName, C extends TagName>(
-   value: FunStateGetter<ChildrenParams<C> | ChildrenParams<C>[]>
+   value: FunStateGetter<ChildrenParams<C> | ChildrenParams<C>[]>,
 ): FunDomUtil<K>;
 
 export function children<K extends TagName, C extends TagName>(
@@ -68,7 +67,7 @@ export function children<K extends TagName, C extends TagName>(
                console.warn('[children] passed argument is not HTMLElement type');
             }
          }
-      }
+      };
 
       // TODO: compare performance with createDocumentFragment
       const handler = (value: ChildrenParams<C> | ChildrenParams<C>[]) => {
@@ -85,7 +84,7 @@ export function children<K extends TagName, C extends TagName>(
             }
             populateChildren(value);
          }
-   
+
          if (useRevert) {
             _removeChildren(el, ...childrenElements);
          } else {
@@ -100,13 +99,13 @@ export function children<K extends TagName, C extends TagName>(
                }
             }
          }
-      }
+      };
 
       _handleUtilityIncomingValue(values.length === 1 ? values[0] : values, handler);
-      
+
       return el;
    };
-};
+}
 
 export const child = <K extends TagName, C extends TagName>(
    name: C,
