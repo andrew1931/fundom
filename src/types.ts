@@ -13,6 +13,8 @@ export type FunState = <T>(
    initialValue: T,
 ) => [getter: FunStateGetter<T>, setter: FunStateSetter<T>];
 
+export type ChildrenParams<C extends TagName> = (() => HTMLElementTagNameMap[C]) | HTMLElementTagNameMap[C];
+
 export type TagName = keyof HTMLElementTagNameMap;
 
 export type FunUtilHandler<T> = (val: T) => void;
@@ -28,8 +30,6 @@ export type IncomingFormatItem<T> =
    | FormatReturnValue;
 
 export type UtilIncomingValue = TextValue | FunStateGetter<TextValue> | FormatReturnValue;
-
-export type Condition<T> = boolean | FunStateGetter<T> | ComputeReturnValue<T>;
 
 export type CaseReturnValue<K extends TagName> = (value: any, isLast: boolean) => FunDomUtil<K>[];
 

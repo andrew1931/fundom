@@ -21,10 +21,10 @@ import type {
    UtilIncomingValue,
    FunDomUtil,
    FunStateGetter,
-   Condition,
    CaseReturnValue,
    TextValue,
    TagName,
+   ChildrenParams,
 } from './types';
 
 export const elem = <K extends TagName>(name: K, ...utils: FunDomUtil<K>[]) => {
@@ -35,50 +35,75 @@ export const elem = <K extends TagName>(name: K, ...utils: FunDomUtil<K>[]) => {
    };
 };
 
-export const children = <K extends TagName, C extends TagName>(
-   ...values: Array<(() => HTMLElementTagNameMap[C]) | HTMLElementTagNameMap[C]>
-): FunDomUtil<K> => {
+
+export function children<K extends TagName, C extends TagName>(
+   ...values: ChildrenParams<C>[]
+): FunDomUtil<K>;
+
+export function children<K extends TagName, C extends TagName>(
+   value: FunStateGetter<ChildrenParams<C> | ChildrenParams<C>[]>
+): FunDomUtil<K>;
+
+export function children<K extends TagName, C extends TagName>(
+   ...values: ChildrenParams<C>[] | [FunStateGetter<ChildrenParams<C> | ChildrenParams<C>[]>]
+): FunDomUtil<K> {
    const childrenElements: HTMLElementTagNameMap[C][] = [];
    return (el, context, ctrlFlowId, useRevert) => {
       if (!_isHtmlElement(el)) {
          console.warn(new NotHTMLElementError('children').message);
          return el;
       }
-      // TODO: compare performance with createDocumentFragment
-
-      if (childrenElements.length === 0) {
-         for (let element of values) {
-            if (_isFunction(element)) {
-               const el = element();
-               if (_isHtmlElement(el)) {
-                  childrenElements.push(el);
-               } else {
-                  console.warn('[children] passed function does not return HTMLElement type');
-               }
+      const populateChildren = (element: ChildrenParams<C>) => {
+         if (_isFunction(element)) {
+            const el = element();
+            if (_isHtmlElement(el)) {
+               childrenElements.push(el);
             } else {
-               if (_isHtmlElement(element)) {
-                  childrenElements.push(element);
-               } else {
-                  console.warn('[children] passed argument is not HTMLElement type');
+               console.warn('[children] passed function does not return HTMLElement type', el);
+            }
+         } else {
+            if (_isHtmlElement(element)) {
+               childrenElements.push(element);
+            } else {
+               console.warn('[children] passed argument is not HTMLElement type');
+            }
+         }
+      }
+
+      // TODO: compare performance with createDocumentFragment
+      const handler = (value: ChildrenParams<C> | ChildrenParams<C>[]) => {
+         if (Array.isArray(value)) {
+            if (childrenElements.length === 0) {
+               for (let element of value) {
+                  populateChildren(element);
+               }
+            }
+         } else {
+            if (childrenElements.length > 0) {
+               _removeChildren(el, ...childrenElements);
+               childrenElements.length = 0;
+            }
+            populateChildren(value);
+         }
+   
+         if (useRevert) {
+            _removeChildren(el, ...childrenElements);
+         } else {
+            const comment = context[ctrlFlowId]?.comment;
+            for (let childElem of childrenElements) {
+               if (!_hasChild(el, childElem)) {
+                  if (comment && comment instanceof Comment) {
+                     el.insertBefore(childElem, comment);
+                  } else {
+                     el.appendChild(childElem);
+                  }
                }
             }
          }
       }
 
-      if (useRevert) {
-         _removeChildren(el, ...childrenElements);
-      } else {
-         const comment = context[ctrlFlowId]?.comment;
-         for (let childElem of childrenElements) {
-            if (!_hasChild(el, childElem)) {
-               if (comment && comment instanceof Comment) {
-                  el.insertBefore(childElem, comment);
-               } else {
-                  el.appendChild(childElem);
-               }
-            }
-         }
-      }
+      _handleUtilityIncomingValue(values.length === 1 ? values[0] : values, handler);
+      
       return el;
    };
 };
@@ -107,12 +132,12 @@ export const child = <K extends TagName, C extends TagName>(
    };
 };
 
-export const list = <T, K extends TagName>(
+export const list = <T, K extends TagName, C extends TagName>(
    data: Array<T> | FunStateGetter<Array<T>>,
-   newElementFn: (item: T, index: number) => ReturnType<typeof elem<K>>,
+   newElementFn: (item: T, index: number) => ReturnType<typeof elem<C>>,
 ): FunDomUtil<K> => {
    const comment = document.createComment('');
-   let prevChildren: HTMLElementTagNameMap[K][] = [];
+   let prevChildren: HTMLElementTagNameMap[C][] = [];
    let prevItems: Array<T> = [];
    return (el, context, ctrlFlowId, useRevert) => {
       if (!_isHtmlElement(el)) {
@@ -132,16 +157,16 @@ export const list = <T, K extends TagName>(
             return;
          }
 
-         const curChildren: HTMLElementTagNameMap[K][] = [];
+         const curChildren: HTMLElementTagNameMap[C][] = [];
          if (prevItems.length > 0) {
             for (let [i, item] of items.entries()) {
                if (Object.is(item, prevItems[i])) {
-                  curChildren.push(prevChildren[i] as HTMLElementTagNameMap[K]);
+                  curChildren.push(prevChildren[i] as HTMLElementTagNameMap[C]);
                } else {
                   const childElem = newElementFn(item, i)();
                   curChildren.push(childElem);
                   if (i < prevItems.length) {
-                     el.replaceChild(childElem, prevChildren[i] as HTMLElementTagNameMap[K]);
+                     el.replaceChild(childElem, prevChildren[i] as HTMLElementTagNameMap[C]);
                   } else {
                      _applyMutations(el, [children(childElem)], context, ctrlFlowId, useRevert);
                   }
@@ -150,7 +175,7 @@ export const list = <T, K extends TagName>(
 
             if (prevItems.length > items.length) {
                for (let i = prevItems.length - 1; i >= items.length; i--) {
-                  _removeChildren(el, prevChildren[i] as HTMLElementTagNameMap[K]);
+                  _removeChildren(el, prevChildren[i] as HTMLElementTagNameMap[C]);
                }
             }
          } else {
@@ -171,18 +196,18 @@ export const list = <T, K extends TagName>(
 };
 
 export const ifElse =
-   <T, K extends TagName>(condition: Condition<T>) =>
+   <K extends TagName>(condition: any) =>
    (...fns1: FunDomUtil<K>[]) =>
    (...fns2: FunDomUtil<K>[]): FunDomUtil<K> => {
-      return _handleControlFlow(condition, (val) => {
+      return _handleControlFlow<any, any, K>(condition, (val) => {
          return Boolean(val) ? fns1 : fns2;
       });
    };
 
 export const ifOnly =
-   <T, K extends TagName>(condition: Condition<T>) =>
+   <K extends TagName>(condition: any) =>
    (...fns1: FunDomUtil<K>[]): FunDomUtil<K> => {
-      return ifElse<T, K>(condition)(...fns1)();
+      return ifElse<K>(condition)(...fns1)();
    };
 
 export const match =
@@ -318,11 +343,7 @@ export const classList = <K extends TagName>(...classNames: UtilIncomingValue[])
             if (useRevert) {
                const snapshot = context[ctrlFlowId]?.snapshot;
                if (snapshot) {
-                  if (!snapshot.classList.contains(classString)) {
-                     el.classList.remove(classString);
-                  } else {
-                     console.warn(`[revert classList] class ${classString} existed before add`);
-                  }
+                  el.classList.remove(classString);
                } else {
                   console.warn(new NoSnapshotError(ctrlFlowId).message);
                }
