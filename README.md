@@ -1,4 +1,5 @@
-## Fundom
+## Fundom 
+[![NPM Version](https://img.shields.io/npm/v/fundom.js.svg?style=for-the-badge)](https://www.npmjs.com/package/fundom.js)
 
 Lightweight JavaScript library to work with DOM api in declarative way with reactive state in functional style.
 It provides a minimum amount of utils to create, mutate and control flow of HTML elements + state api for reactive changes.
