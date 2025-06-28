@@ -156,36 +156,44 @@ export const list = <T, K extends TagName, C extends TagName>(
             return;
          }
 
-         const curChildren: HTMLElementTagNameMap[C][] = [];
-         if (prevItems.length > 0) {
-            for (let [i, item] of items.entries()) {
-               if (Object.is(item, prevItems[i])) {
-                  curChildren.push(prevChildren[i] as HTMLElementTagNameMap[C]);
-               } else {
-                  const childElem = newElementFn(item, i)();
-                  curChildren.push(childElem);
-                  if (i < prevItems.length) {
-                     el.replaceChild(childElem, prevChildren[i] as HTMLElementTagNameMap[C]);
-                  } else {
-                     _applyMutations(el, [children(childElem)], context, ctrlFlowId, useRevert);
-                  }
-               }
-            }
-
-            if (prevItems.length > items.length) {
-               for (let i = prevItems.length - 1; i >= items.length; i--) {
-                  _removeChildren(el, prevChildren[i] as HTMLElementTagNameMap[C]);
-               }
+         if (useRevert) {
+            if (prevItems.length > 0) {
+               _applyMutations(el, [children(...prevChildren)], context, ctrlFlowId, useRevert);
+               prevChildren = [];
+               prevItems = [];
             }
          } else {
-            for (let [i, item] of items.entries()) {
-               curChildren.push(newElementFn(item, i)());
-            }
-            _applyMutations(el, [children(...curChildren)], context, ctrlFlowId, useRevert);
-         }
+            const curChildren: HTMLElementTagNameMap[C][] = [];
+            if (prevItems.length > 0) {
+               for (let [i, item] of items.entries()) {
+                  if (Object.is(item, prevItems[i])) {
+                     curChildren.push(prevChildren[i] as HTMLElementTagNameMap[C]);
+                  } else {
+                     const childElem = newElementFn(item, i)();
+                     curChildren.push(childElem);
+                     if (i < prevItems.length) {
+                        el.replaceChild(childElem, prevChildren[i] as HTMLElementTagNameMap[C]);
+                     } else {
+                        _applyMutations(el, [children(childElem)], context, ctrlFlowId, useRevert);
+                     }
+                  }
+               }
 
-         prevChildren = curChildren;
-         prevItems = items;
+               if (prevItems.length > items.length) {
+                  for (let i = prevItems.length - 1; i >= items.length; i--) {
+                     _removeChildren(el, prevChildren[i] as HTMLElementTagNameMap[C]);
+                  }
+               }
+            } else {
+               for (let [i, item] of items.entries()) {
+                  curChildren.push(newElementFn(item, i)());
+               }
+               _applyMutations(el, [children(...curChildren)], context, ctrlFlowId, useRevert);
+            }
+
+            prevChildren = curChildren;
+            prevItems = items;
+         }
       };
 
       _handleUtilityIncomingValue<Array<T>>(data, handler);
@@ -271,23 +279,28 @@ export const html = <K extends TagName>(value: UtilIncomingValue): FunDomUtil<K>
    };
 };
 
-export const txt = <K extends TagName>(value: UtilIncomingValue): FunDomUtil<K> => {
+export const txt = <K extends TagName>(
+   value: UtilIncomingValue,
+   options: { useTextContent: boolean } = { useTextContent: false },
+): FunDomUtil<K> => {
    return (el, context, ctrlFlowId, useRevert) => {
       if (!_isHtmlElement(el)) {
          console.warn(new NotHTMLElementError('txt').message);
          return el;
       }
 
+      const targetMethod = options.useTextContent ? 'textContent' : 'innerText';
+
       const handler = (val: TextValue) => {
          if (useRevert) {
             const snapshot = context[ctrlFlowId]?.snapshot;
             if (snapshot) {
-               el.innerText = snapshot.innerText;
+               el[targetMethod] = snapshot[targetMethod];
             } else {
                console.warn(new NoSnapshotError(ctrlFlowId).message);
             }
          } else {
-            el.innerText = String(val);
+            el[targetMethod] = String(val);
          }
       };
       _handleUtilityIncomingValue<TextValue>(value, handler);

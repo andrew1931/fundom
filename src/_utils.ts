@@ -54,6 +54,7 @@ export const _makeSnapshot = (el: HTMLElement): ElementSnapshot => {
       childrenLength: el.children.length,
       innerHTML: el.innerHTML,
       innerText: el.innerText,
+      textContent: el.textContent || '',
       style: el.style,
       attributes: el.attributes,
       classList: el.classList,
