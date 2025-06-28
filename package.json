@@ -1,6 +1,6 @@
 {
    "name": "fundom.js",
-   "version": "0.3.0",
+   "version": "0.4.0",
    "description": "JS library for creating reactive ui elements in declarative way",
    "author": "Andrei Kuzmich",
    "repository": {
