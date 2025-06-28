@@ -4,11 +4,17 @@ export type FunStateGetterOptions = {
    once?: boolean;
    releaseEffect?: FunStateOnReleaseEffect;
 };
+export type FunStateSetterOptions = {
+   force?: boolean;
+};
 export type FunStateGetter<T> = (subCb?: FunStateSub<T>, options?: FunStateGetterOptions) => T;
 export type FunStateAction = 'pause' | 'resume' | 'release';
 export type FunStateController<T> = (action: FunStateAction, sub?: FunStateSub<T>) => void;
 export type FunStateSetterCallback<T> = (controller: FunStateController<T>) => void;
-export type FunStateSetter<T> = (value: T | FunStateSetterCallback<T>) => void;
+export type FunStateSetter<T> = (
+   value: T | FunStateSetterCallback<T>,
+   options?: FunStateSetterOptions,
+) => void;
 export type FunState = <T>(
    initialValue: T,
 ) => [getter: FunStateGetter<T>, setter: FunStateSetter<T>];
@@ -39,6 +45,7 @@ export type ElementSnapshot = {
    childrenLength: number;
    innerHTML: string;
    innerText: string;
+   textContent: string;
    style: CSSStyleDeclaration;
    attributes: NamedNodeMap;
    classList: DOMTokenList;

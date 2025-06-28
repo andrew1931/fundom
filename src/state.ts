@@ -4,6 +4,7 @@ import type {
    FunStateAction,
    FunStateGetterOptions,
    FunStateSetterCallback,
+   FunStateSetterOptions,
    FunStateSub,
 } from './types';
 
@@ -124,20 +125,28 @@ export const funState: FunState = <T>(initialValue: T) => {
    /*
     * @description updates current value, can be used to control subscribers' reactivity if callback is provided instead of new value
     **/
-   const setter = (arg: T | FunStateSetterCallback<T>): void => {
+   const setter = (arg: T | FunStateSetterCallback<T>, options?: FunStateSetterOptions): void => {
       if (_isFunction(arg)) {
          (arg as FunStateSetterCallback<T>)(controller);
       } else {
-         if (!Object.is(arg, value)) {
+         const setNextValue = () => {
             value = arg as T;
-            subs.forEach(([sub, options]) => {
+            subs.forEach(([sub, { once }]) => {
                if (pausedSubs.indexOf(sub) === -1) {
                   sub(value);
-                  if (options.once) {
+                  if (once) {
                      release(sub);
                   }
                }
             });
+         };
+
+         if (options && options.force) {
+            setNextValue();
+         } else {
+            if (!Object.is(arg, value)) {
+               setNextValue();
+            }
          }
       }
    };
